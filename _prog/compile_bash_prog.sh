@@ -1,5 +1,14 @@
 _compile_bash_deps_prog() {
-	true
+	#_deps_channel
+	
+	#_deps_metaengine
+	
+	#_deps_mount
+	
+	#_deps_notLean
+	
+	_deps_git
+	_deps_bup
 }
 
 #Default is to include all, or run a specified configuration. For this reason, it will be more typical to override this entire function, rather than append any additional code.
@@ -107,6 +116,11 @@ _compile_bash_installation_prog() {
 
 _compile_bash_program_prog() {	
 	export includeScriptList
+	
+	includeScriptList+=( "hardware/"escpos.sh )
+	
+	includeScriptList+=( "hardware/"msr605.sh )
+	
 	true
 }
 

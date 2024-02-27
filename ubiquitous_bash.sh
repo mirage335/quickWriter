@@ -36,7 +36,7 @@ _ub_cksum_special_derivativeScripts_contents() {
 #export ub_setScriptChecksum_disable='true'
 ( [[ -e "$0".nck ]] || [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [[ "$1" == '--profile' ]] || [[ "$1" == '--script' ]] || [[ "$1" == '--call' ]] || [[ "$1" == '--return' ]] || [[ "$1" == '--devenv' ]] || [[ "$1" == '--shell' ]] || [[ "$1" == '--bypass' ]] || [[ "$1" == '--parent' ]] || [[ "$1" == '--embed' ]] || [[ "$1" == '--compressed' ]] || [[ "$0" == "/bin/bash" ]] || [[ "$0" == "-bash" ]] || [[ "$0" == "/usr/bin/bash" ]] || [[ "$0" == "bash" ]] ) && export ub_setScriptChecksum_disable='true'
 export ub_setScriptChecksum_header='2591634041'
-export ub_setScriptChecksum_contents='2118737076'
+export ub_setScriptChecksum_contents='1974665057'
 
 # CAUTION: Symlinks may cause problems. Disable this test for such cases if necessary.
 # WARNING: Performance may be crucial here.
@@ -44678,7 +44678,100 @@ _package() {
 
 
 
+
+
+
+_setup_prog() {
+	if [[ $("$scriptAbsoluteLocation" _rand_bin | wc -c | tr -dc '0-9') -lt 16 ]]
+	then
+		echo 'missing: _rand (coreoracle, pairKey)'
+		_messageFAIL
+		_stop 1
+		return 1
+	fi
+	
+	
+	# python3-serial
+	_getDep 'pyserial-ports'
+	_getDep 'pyserial-miniterm'
+	_getDep 'python3/dist-packages/serial/__main__.py'
+}
+
+
 ##### Core
+
+
+_rand_bin() {
+	local currentPath_bin
+	
+	currentPath_bin="$HOME"/core/infrastructure/coreoracle/pairKey
+	if [[ -e "$currentPath_bin" ]]
+	then
+		"$currentPath_bin" _rand "$@"
+		return
+	fi
+	
+	
+	if _if_cygwin
+	then
+		currentPath_bin=/cygdrive/c/core/infrastructure/coreoracle/pairKey
+		if [[ -e "$currentPath_bin" ]]
+		then
+			"$currentPath_bin" _rand "$@"
+			return
+		fi
+		
+		currentPath_bin=/cygdrive/c/core/infrastructure/extendedInterface/_lib/coreoracle-msw/pairKey
+		if [[ -e "$currentPath_bin" ]]
+		then
+			"$currentPath_bin" _rand "$@"
+			return
+		fi
+		
+		currentPath_bin=/cygdrive/c/core/infrastructure/extendedInterface/_lib/coreoracle/pairKey
+		if [[ -e "$currentPath_bin" ]]
+		then
+			"$currentPath_bin" _rand "$@"
+			return
+		fi
+	fi
+	
+	
+	_stop 1
+	exit 1
+	return 1
+}
+
+
+
+
+
+
+
+_seed() {
+	echo test
+}
+
+
+
+
+
+
+
+
+
+_refresh_anchors() {
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-barcode
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-magswipe
+	
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic-barcode
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic-magswipe
+	
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-wifi
+}
+
 
 
 #####Program
@@ -44709,6 +44802,10 @@ _main() {
 	
 	_stop
 }
+
+ 
+
+ 
 
 #currentReversePort=""
 #currentMatchingReversePorts=""
@@ -46406,14 +46503,16 @@ CZXWXcRMTo8EmM8i4d
 _generate_compile_bash_prog() {
 	"$scriptAbsoluteLocation" _true
 	
-	return
+	#return
 	
 	rm "$scriptAbsoluteFolder"/ubiquitous_bash.sh
+	
+	"$scriptAbsoluteLocation" _compile_bash quickWriter quickWriter
 	
 	#"$scriptAbsoluteLocation" _compile_bash cautossh cautossh
 	#"$scriptAbsoluteLocation" _compile_bash lean lean.sh
 	
-	"$scriptAbsoluteLocation" _compile_bash core ubiquitous_bash.sh
+	#"$scriptAbsoluteLocation" _compile_bash core ubiquitous_bash.sh
 	
 	#"$scriptAbsoluteLocation" _compile_bash "" ""
 	#"$scriptAbsoluteLocation" _compile_bash ubiquitous_bash ubiquitous_bash.sh
@@ -47789,7 +47888,16 @@ _compile_bash() {
 }
 
 _compile_bash_deps_prog() {
-	true
+	#_deps_channel
+	
+	#_deps_metaengine
+	
+	#_deps_mount
+	
+	#_deps_notLean
+	
+	_deps_git
+	_deps_bup
 }
 
 #Default is to include all, or run a specified configuration. For this reason, it will be more typical to override this entire function, rather than append any additional code.
@@ -47897,6 +48005,11 @@ _compile_bash_installation_prog() {
 
 _compile_bash_program_prog() {	
 	export includeScriptList
+	
+	includeScriptList+=( "hardware/"escpos.sh )
+	
+	includeScriptList+=( "hardware/"msr605.sh )
+	
 	true
 }
 

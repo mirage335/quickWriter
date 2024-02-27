@@ -1,4 +1,7 @@
 _compile_bash_deps_prog() {
+	_deps_abstractfs
+	#_deps_fakehome
+	
 	#_deps_channel
 	
 	#_deps_metaengine

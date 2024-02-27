@@ -36,7 +36,7 @@ _ub_cksum_special_derivativeScripts_contents() {
 #export ub_setScriptChecksum_disable='true'
 ( [[ -e "$0".nck ]] || [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [[ "$1" == '--profile' ]] || [[ "$1" == '--script' ]] || [[ "$1" == '--call' ]] || [[ "$1" == '--return' ]] || [[ "$1" == '--devenv' ]] || [[ "$1" == '--shell' ]] || [[ "$1" == '--bypass' ]] || [[ "$1" == '--parent' ]] || [[ "$1" == '--embed' ]] || [[ "$1" == '--compressed' ]] || [[ "$0" == "/bin/bash" ]] || [[ "$0" == "-bash" ]] || [[ "$0" == "/usr/bin/bash" ]] || [[ "$0" == "bash" ]] ) && export ub_setScriptChecksum_disable='true'
 export ub_setScriptChecksum_header='2591634041'
-export ub_setScriptChecksum_contents='1106568905'
+export ub_setScriptChecksum_contents='2255549173'
 
 # CAUTION: Symlinks may cause problems. Disable this test for such cases if necessary.
 # WARNING: Performance may be crucial here.
@@ -4761,6 +4761,1468 @@ _getDep() {
 	_mustGetDep "$@"
 }
 
+
+_start_virt_instance() {
+	
+	mkdir -p "$instancedVirtDir" || return 1
+	mkdir -p "$instancedVirtFS" || return 1
+	mkdir -p "$instancedVirtTmp" || return 1
+	
+	mkdir -p "$instancedVirtHome" || return 1
+	###mkdir -p "$instancedVirtHomeRef" || return 1
+	
+	mkdir -p "$sharedHostProjectDir" > /dev/null 2>&1
+	mkdir -p "$instancedProjectDir" || return 1
+	
+}
+
+_start_virt_all() {
+	
+	_start_virt_instance
+	
+	mkdir -p "$globalVirtDir" || return 1
+	mkdir -p "$globalVirtFS" || return 1
+	mkdir -p "$globalVirtTmp" || return 1
+	
+	
+	return 0
+}
+
+_stop_virt_instance() {
+	
+	_wait_umount "$instancedProjectDir"
+	sudo -n rmdir "$instancedProjectDir"
+	
+	_wait_umount "$instancedVirtHome"
+	sudo -n rmdir "$instancedVirtHome"
+	###_wait_umount "$instancedVirtHomeRef"
+	###sudo -n rmdir "$instancedVirtHomeRef"
+	sudo -n rmdir "$instancedVirtFS"/home
+	
+	_wait_umount "$instancedVirtFS"
+	sudo -n rmdir "$instancedVirtFS"
+	_wait_umount "$instancedVirtTmp"
+	sudo -n rmdir "$instancedVirtTmp"
+	_wait_umount "$instancedVirtDir"
+	sudo -n rmdir "$instancedVirtDir"
+	
+	
+	
+	return 0
+	
+}
+
+_stop_virt_all() {
+	
+	_stop_virt_instance || return 1
+	
+	_wait_umount "$globalVirtFS" || return 1
+	_wait_umount "$globalVirtTmp" || return 1
+	_wait_umount "$globalVirtDir" || return 1
+	
+	
+	
+}
+
+
+#Triggers before "user" and "edit" virtualization commands, to allow a single installation of a virtual machine to be used by multiple ubiquitous labs.
+#Does NOT trigger for all non-user commands (eg. open, docker conversion), as these are intended for developers with awareness of associated files under "$scriptLocal".
+
+# WARNING
+# DISABLED by default. Must be explicitly enabled by setting "$ubVirtImageLocal" to "false" in "ops".
+
+#toImage
+
+#_closeChRoot
+
+#_closeVBoxRaw
+
+#_editQemu
+#_editVBox
+
+#_userChRoot
+#_userQemu
+#_userVBox
+
+#_userDocker
+
+#_dockerCommit
+#_dockerLaunch
+#_dockerAttach
+#_dockerOn
+#_dockerOff
+
+_findInfrastructure_virtImage() {
+	[[ "$ubVirtImageLocal" != "false" ]] && return 0
+	
+	[[ -e "$scriptLocal"/vm.img ]] && export ubVirtImageLocal="true" && return 0
+	[[ -e "$scriptLocal"/vm.vdi ]] && export ubVirtImageLocal="true" && return 0
+	[[ -e "$scriptLocal"/vmvdiraw.vmdi ]] && export ubVirtImageLocal="true" && return 0
+	
+	# WARNING: Override implies local image.
+	[[ "$ubVirtImageIsRootPartition" != "" ]] && export ubVirtImageLocal="true" && return 0
+	[[ "$ubVirtImageIsDevice" != "" ]] && export ubVirtImageLocal="true" && return 0
+	[[ "$ubVirtImageOverride" != "" ]] && export ubVirtImageLocal="true" && return 0
+	[[ "$ubVirtDeviceOverride" != "" ]] && export ubVirtImageLocal="true" && return 0
+	#[[ "$ubVirtPlatformOverride" != "" ]] && export ubVirtImageLocal="true" && return 0
+	
+	# WARNING: Symlink implies local image (even if non-existent destination).
+	[[ -h "$scriptLocal"/vm.img ]] && export ubVirtImageLocal="true" && return 0
+	[[ -h "$scriptLocal"/vm.vdi ]] && export ubVirtImageLocal="true" && return 0
+	[[ -h "$scriptLocal"/vmvdiraw.vmdi ]] && export ubVirtImageLocal="true" && return 0
+	
+	_checkSpecialLocks && export ubVirtImageLocal="true" && return 0
+	
+	# DANGER: Recursion hazard.
+	_findInfrastructure_virtImage_script "$@"
+}
+
+# WARNING
+#Overloading with "ops" is recommended.
+_findInfrastructure_virtImage_script() {
+	local infrastructureName=$(basename "$scriptAbsoluteFolder")
+	
+	local recursionExec
+	local recursionExecList
+	local currentRecursionExec
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../../../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../../core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	#recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../../core/lab/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$HOME"/core/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$HOME"/core/extra/infrastructure/vm/"$infrastructureName"/ubiquitous_bash.sh)
+	
+	local whichExeVM
+	whichExeVM=nixexevm
+	[[ "$virtOStype" == 'MSW'* ]] && whichExeVM=winexevm
+	[[ "$virtOStype" == 'Windows'* ]] && whichExeVM=winexevm
+	[[ "$vboxOStype" == 'Windows'* ]] && whichExeVM=winexevm
+	
+	
+	recursionExecList+=("$scriptAbsoluteFolder"/../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../../core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$scriptAbsoluteFolder"/../../../../../../../core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$HOME"/core/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$HOME"/core/extra/infrastructure/"$whichExeVM"/ubiquitous_bash.sh)
+	
+	recursionExecList+=("$HOME"/core/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	recursionExecList+=("$HOME"/core/extra/infrastructure/vm/"$whichExeVM"/ubiquitous_bash.sh)
+	
+	for currentRecursionExec in "${recursionExecList[@]}"
+	do
+		if _recursion_guard "$currentRecursionExec"
+		then
+			"$currentRecursionExec" "$@"
+			return
+		fi
+	done
+}
+
+
+#Removes 'file://' often used by browsers.
+_removeFilePrefix() {
+	local translatedFileParam
+	translatedFileParam=${1/#file:\/\/}
+	
+	_safeEcho_newline "$translatedFileParam"
+}
+
+#Translates back slash parameters (UNIX paths) to forward slash parameters (MSW paths).
+_slashBackToForward() {
+	local translatedFileParam
+	translatedFileParam=${1//\//\\}
+	
+	_safeEcho_newline "$translatedFileParam"
+}
+
+_nixToMSW() {
+	echo -e -n 'Z:'
+	
+	local localAbsoluteFirstParam
+	localAbsoluteFirstParam=$(_getAbsoluteLocation "$1")
+	
+	local intermediateStepOne
+	intermediateStepOne=_removeFilePrefix "$localAbsoluteFirstParam"
+	
+	_slashBackToForward "$intermediateStepOne"
+}
+
+_test_localpath() {
+	_getDep realpath
+}
+
+
+#Determines whether test parameter is in the path of base parameter.
+#"$1" == testParameter
+#"$2" == baseParameter
+_pathPartOf() {
+	local testParameter
+	testParameter="IAUjqyPF2s3gqjC0t1"
+	local baseParameter
+	baseParameter="JQRBqIoOVoDJuzc7k9"
+	
+	[[ -e "$1" ]] && testParameter=$(_getAbsoluteLocation "$1")
+	[[ -e "$2" ]] && baseParameter=$(_getAbsoluteLocation "$2")
+	
+	[[ "$testParameter" != "$baseParameter"* ]] && return 1
+	return 0
+}
+
+#Checks if file/directory exists on local filesystem, and meets other criteria. Intended to be called within the virtualization platform, through _checkBaseDirRemote . Often maintained merely for the sake of example.
+_checkBaseDirLocal() {
+	/bin/bash -c '[[ -e "'"$1"'" ]] && ! [[ -d "'"$1"'" ]] && [[ "'"$1"'" != "." ]] && [[ "'"$1"'" != ".." ]] && [[ "'"$1"'" != "./" ]] && [[ "'"$1"'" != "../" ]]'
+}
+
+_checkBaseDirRemote_app_localOnly() {
+	false
+}
+
+_checkBaseDirRemote_app_remoteOnly() {
+	[[ "$1" == "/bin/bash" ]] && return 0
+}
+
+# WARNING Strongly recommend not sharing root with guest, but this can be overridden by "ops".
+_checkBaseDirRemote_common_localOnly() {
+	[[ "$1" == "." ]] && return 0
+	[[ "$1" == "./" ]] && return 0
+	[[ "$1" == ".." ]] && return 0
+	[[ "$1" == "../" ]] && return 0
+	
+	[[ "$1" == "/" ]] && return 0
+	
+	return 1
+}
+
+_checkBaseDirRemote_common_remoteOnly() {
+	[[ "$1" == "/bin"* ]] && return 0
+	[[ "$1" == "/lib"* ]] && return 0
+	[[ "$1" == "/lib64"* ]] && return 0
+	[[ "$1" == "/opt"* ]] && return 0
+	[[ "$1" == "/usr"* ]] && return 0
+	
+	[[ "$1" == "/bin/bash" ]] && return 0
+	
+	#type "$1" > /dev/null 2>&1 && return 0
+	
+	#! [[ "$1" == "/"* ]] && return 0
+	
+	return 1
+}
+
+#Checks if file/directory exists on remote system. Overload this function with implementation specific to the container/virtualization solution in use (ie. docker run).
+_checkBaseDirRemote() {
+	_checkBaseDirRemote_common_localOnly "$1" && return 0
+	_checkBaseDirRemote_common_remoteOnly "$1" && return 1
+	
+	_checkBaseDirRemote_app_localOnly "$1" && return 0
+	_checkBaseDirRemote_app_remoteOnly "$1" && return 1
+	
+	[[ "$checkBaseDirRemote" == "" ]] && checkBaseDirRemote="false"
+	"$checkBaseDirRemote" "$1" || return 1
+	return 0
+}
+
+#Reports the highest-level directory containing all files in given parameter set.
+#"$@" == parameters to search
+#$checkBaseDirRemote == function to check if file/directory exists on remote system
+_searchBaseDir() {
+	local baseDir
+	local newDir
+	
+	baseDir=""
+	
+	local processedArgs
+	local currentArg
+	local currentResult
+	
+	#Do not translate if exists on remote filesystem. Dummy check by default unless overloaded, by $checkBaseDirRemote value.
+	#Intended to prevent "/bin/true" and similar from being translated, so execution of remote programs can be requested.
+	for currentArg in "$@"
+	do
+		if _checkBaseDirRemote "$currentArg"
+		then
+			continue
+		fi
+		
+		currentResult="$currentArg"
+		processedArgs+=("$currentResult")
+	done
+	
+	for currentArg in "${processedArgs[@]}"
+	do
+		
+		if [[ ! -e "$currentArg" ]]
+		then
+			continue
+		fi
+		
+		if [[ "$baseDir" == "" ]]
+		then
+			baseDir=$(_findDir "$currentArg")
+		fi
+		
+		for subArg in "${processedArgs[@]}"
+		do
+			if [[ ! -e "$subArg" ]]
+			then
+				continue
+			fi
+			
+			newDir=$(_findDir "$subArg")
+			
+			# Trailing slash added to comparison to prevent partial matching of directory names.
+			# https://stackoverflow.com/questions/12340846/bash-shell-script-to-find-the-closest-parent-directory-of-several-files
+			# https://stackoverflow.com/questions/9018723/what-is-the-simplest-way-to-remove-a-trailing-slash-from-each-parameter
+			while [[ "${newDir%/}/" != "${baseDir%/}/"* ]]
+			do
+				baseDir=$(_findDir "$baseDir"/..)
+				
+				if [[ "$baseDir" == "/" ]]
+				then
+					break
+				fi
+			done
+			
+		done
+		
+		
+		
+		
+	done
+	
+	_safeEcho_newline "$baseDir"
+}
+
+#Converts to relative path, if provided a file parameter.
+#"$1" == parameter to search
+#"$2" == sharedHostProjectDir
+#"$3" == sharedGuestProjectDir (optional)
+_localDir() {
+	if _checkBaseDirRemote "$1"
+	then
+		_safeEcho_newline "$1"
+		return
+	fi
+	
+	if [[ ! -e "$2" ]]
+	then
+		_safeEcho_newline "$1"
+		return
+	fi
+	
+	if [[ ! -e "$1" ]] || ! _pathPartOf "$1" "$2"
+	then
+		_safeEcho_newline "$1"
+		return
+	fi
+	
+	[[ "$3" != "" ]] && _safeEcho "$3" && [[ "$3" != "/" ]] && _safeEcho "/"
+	realpath -L -s --relative-to="$2" "$1"
+	
+}
+
+
+#Takes a list of parameters, idenfities file parameters, finds a common path, and translates all parameters to that path. Essentially provides shared folder and file parameter translation for application virtualization solutions.
+#Keep in mind this function has a relatively complex set of inputs and outputs, serving a critically wide variety of edgy use cases across platforms.
+#"$@" == input parameters
+
+#"$sharedHostProjectDir" == if already set, overrides the directory that will be shared, rarely used to share entire root
+#"$sharedGuestProjectDir" == script default is /home/ubvrtusr/project, can be overridden, "X:" typical for MSW guests
+#Setting sharedGuestProjectDir to a drive letter designation will also enable UNIX/MSW parameter translation mechanisms.
+
+# export sharedHostProjectDir == common directory to bind mount
+# export processedArgs == translated arguments to be used in place of "$@"
+
+# WARNING Consider specified syntax for portability.
+# _runExec "${processedArgs[@]}"
+_virtUser() {
+	export sharedHostProjectDir="$sharedHostProjectDir"
+	export processedArgs
+	
+	[[ "$virtUserPWD" == "" ]] && export virtUserPWD="$outerPWD"
+	
+	if [[ -e /tmp/.X11-unix ]] && [[ "$DISPLAY" != "" ]] && type xauth > /dev/null 2>&1
+	then
+		export XSOCK=/tmp/.X11-unix
+		export XAUTH=/tmp/.virtuser.xauth."$sessionid"
+		touch $XAUTH
+		xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
+	fi
+	
+	if [[ "$sharedHostProjectDir" == "" ]]
+	then
+		sharedHostProjectDir=$(_searchBaseDir "$@" "$virtUserPWD")
+		#sharedHostProjectDir="$safeTmp"/shared
+		mkdir -p "$sharedHostProjectDir"
+	fi
+	
+	export localPWD=$(_localDir "$virtUserPWD" "$sharedHostProjectDir" "$sharedGuestProjectDir")
+	export virtUserPWD=
+	
+	#If $sharedGuestProjectDir matches MSW drive letter format, enable translation of other non-UNIX file parameter differences.
+	local enableMSWtranslation
+	enableMSWtranslation=false
+	_safeEcho_newline "$sharedGuestProjectDir" | grep '^[[:alpha:]]\:\|^[[:alnum:]][[:alnum:]]\:\|^[[:alnum:]][[:alnum:]][[:alnum:]]\:' > /dev/null 2>&1 && enableMSWtranslation=true
+	
+	#http://stackoverflow.com/questions/15420790/create-array-in-loop-from-number-of-arguments
+	#local processedArgs
+	local currentArg
+	local currentResult
+	processedArgs=()
+	for currentArg in "$@"
+	do
+		currentResult=$(_localDir "$currentArg" "$sharedHostProjectDir" "$sharedGuestProjectDir")
+		[[ "$enableMSWtranslation" == "true" ]] && currentResult=$(_slashBackToForward "$currentResult")
+		processedArgs+=("$currentResult")
+	done
+}
+
+_stop_virtLocal() {
+	[[ "$XAUTH" == "" ]] && return
+	[[ ! -e "$XAUTH" ]] && return
+	
+	rm -f "$XAUTH" > /dev/null 2>&1
+}
+
+_test_virtLocal_X11() {
+	! _wantGetDep xauth && echo warn: missing: xauth && return 1
+	return 0
+}
+
+
+# TODO: Expansion needed.
+_vector_virtUser_sequence_sequence() {
+	export sharedHostProjectDir=
+	export sharedGuestProjectDir=/home/user/project
+	_virtUser /tmp
+	#_safeEcho_newline "${processedArgs[0]}"
+	[[ "${processedArgs[0]}" != '/home/user/project/tmp' ]] && echo 'fail: _vector_virtUser' && _messageFAIL
+	
+	export sharedHostProjectDir=/
+	export sharedGuestProjectDir='Z:'
+	_virtUser /tmp
+	#_safeEcho_newline "${processedArgs[0]}"
+	[[ "${processedArgs[0]}" != 'Z:\tmp' ]] && echo 'fail: _vector_virtUser' && _messageFAIL
+	
+	export sharedHostProjectDir=/tmp
+	export sharedGuestProjectDir='/home/user/project/tmp'
+	_virtUser /tmp
+	#_safeEcho_newline "${processedArgs[0]}"
+	[[ "${processedArgs[0]}" != '/home/user/project/tmp/.' ]] && echo 'fail: _vector_virtUser' && _messageFAIL
+	
+	export virtUserPWD='/tmp'
+	export sharedHostProjectDir=/tmp
+	export sharedGuestProjectDir='/home/user/project/tmp'
+	_virtUser /tmp
+	#_safeEcho_newline "${processedArgs[0]}"
+	#_safeEcho_newline "$localPWD"
+	[[ "$localPWD" != '/home/user/project/tmp/.' ]] && echo 'fail: _vector_virtUser' && _messageFAIL
+	
+	export virtUserPWD='/tmp'
+	export sharedHostProjectDir=/tmp
+	export sharedGuestProjectDir='/home/user/project/tmp'
+	_virtUser -e /tmp
+	#_safeEcho_newline "${processedArgs[0]}"
+	[[ "${processedArgs[0]}" != '-e' ]] && echo 'fail: _vector_virtUser' && _messageFAIL
+	
+	return 0
+}
+_vector_virtUser_sequence() {
+	local functionEntryPWD
+	functionEntryPWD="$PWD"
+	
+	_start
+	mkdir -p "$safeTmp"/delete
+	cd "$safeTmp"/delete
+	#rmdir "$safeTmp"/delete
+	
+	
+	"$scriptAbsoluteLocation" _vector_virtUser_sequence_sequence "$@"
+	[[ "$?" != "0" ]] && _stop 1
+	
+	
+	rmdir "$safeTmp"/delete
+	cd "$functionEntryPWD"
+	_stop 0
+}
+_vector_virtUser() {
+	"$scriptAbsoluteLocation" _vector_virtUser_sequence "$@"
+	[[ "$?" != "0" ]] && _stop 1
+	
+	return 0
+}
+
+
+
+
+
+
+_test_abstractfs_sequence() {
+	export afs_nofs="true"
+	if ! "$scriptAbsoluteLocation" _abstractfs ls "$scriptAbsoluteLocation" > /dev/null 2>&1
+	then
+		_stop 1
+	fi
+}
+
+_test_abstractfs() {
+	_getDep md5sum
+	if ! "$scriptAbsoluteLocation" _test_abstractfs_sequence
+	then
+		echo 'fail: abstractfs: ls'
+		_stop 1
+	fi
+}
+
+# WARNING: First parameter, "$1" , must always be non-translated program to run or specialized abstractfs command.
+# Specifically do not attempt _abstractfs "$scriptAbsoluteLocation" or similar.
+#"$scriptAbsoluteLocation" _fakeHome "$scriptAbsoluteLocation" _abstractfs bash
+# DANGER: Consistent directory naming.
+# Force creation of 'project.afs' .
+#export afs_nofs='false'
+#export ubAbstractFS_enable_projectafs_dir='true'
+_abstractfs() {
+	#Nesting prohibited. Not fully tested.
+	# WARNING: May cause infinite recursion symlinks.
+	[[ "$abstractfs" != "" ]] && return 1
+	
+	_reset_abstractfs
+	
+	_prepare_abstract
+	
+	local abstractfs_command="$1"
+	shift
+	
+	export virtUserPWD="$PWD"
+	
+	export abstractfs_puid=$(_uid)
+	
+	
+	local current_abstractfs_base_args
+	current_abstractfs_base_args=("${@}")
+	
+	[[ "$ubAbstractFS_enable_CLD" == 'true' ]] && [[ "$ubASD_CLD" != '' ]] && current_abstractfs_base_args+=( "$ubASD_PRJ" "$ubASD_CLD" )
+	
+	_base_abstractfs "${current_abstractfs_base_args[@]}"
+	
+	
+	_name_abstractfs > /dev/null 2>&1
+	[[ "$abstractfs_name" == "" ]] && return 1
+	
+	
+	# WARNING: Enabling may allow a misplaced 'project.afs' file in "/" , "$HOME' , or similar, to override a legitimate directory.
+	# WARNING: Conflicting 'project.afs' files may break 'scope' use cases relying on "$ubASD_CLD" or similar.
+	# However, such a misplaced file may already cause wrong directory collisions with abstractfs.
+	# Historically not enabled by default. Consider enabling by default equivalent to at least a minor version bump - be wary of any possible broken use cases.
+	if [[ "$abstractfs_projectafs" != "" ]]
+	then
+		export abstractfs_projectafs_dir=$(_getAbsoluteFolder "$abstractfs_projectafs")
+		[[ "$ubAbstractFS_enable_projectafs_dir" == 'true' ]] && current_abstractfs_base_args+=( "$abstractfs_projectafs_dir" ) && _base_abstractfs "${current_abstractfs_base_args[@]}" > /dev/null 2>&1
+		#[[ "$ubAbstractFS_enable_projectafs_dir" != 'false' ]] && current_abstractfs_base_args+=( "$abstractfs_projectafs_dir" ) && _base_abstractfs "${current_abstractfs_base_args[@]}" > /dev/null 2>&1
+	fi
+	
+	export abstractfs="$abstractfs_root"/"$abstractfs_name"
+	
+	_set_share_abstractfs
+	_relink_abstractfs
+	
+	_virtUser "$@"
+	
+	cd "$localPWD"
+	#cd "$abstractfs_base"
+	#cd "$abstractfs"
+	
+	local commandExitStatus
+	commandExitStatus=1
+	
+	#_scope_terminal "${processedArgs[@]}"
+	
+	if ! [[ -L "$abstractfs" ]] && [[ -d "$abstractfs" ]]
+	then
+		# _messagePlain_bad 'fail: abstractfs: abstractfs_base is a directory: abstractfs_base= ""$abstractfs_base"
+		rmdir "$abstractfs"
+		_set_share_abstractfs_reset
+		_rmlink_abstractfs
+		return 1
+	fi
+	
+	_set_abstractfs_disable_CLD
+	[[ "$abstractfs_command" == 'ub_abstractfs_getOnly_dst' ]] && echo "$abstractfs"
+	[[ "$abstractfs_command" == 'ub_abstractfs_getOnly_src' ]] && echo "$abstractfs_base"
+	if [[ "$abstractfs_command" != 'ub_abstractfs_getOnly_dst' ]] && [[ "$abstractfs_command" != 'ub_abstractfs_getOnly_src' ]]
+	then
+		"$abstractfs_command" "${processedArgs[@]}"
+		commandExitStatus="$?"
+	fi
+	
+	_set_share_abstractfs_reset
+	_rmlink_abstractfs
+	
+	return "$commandExitStatus"
+}
+
+
+
+
+
+_get_abstractfs_dst_procedure() {
+	shift
+	_abstractfs 'ub_abstractfs_getOnly_dst' "$@"
+}
+_get_abstractfs_dst_sequence() {
+	_start
+	_get_abstractfs_dst_procedure "$@"
+	_stop 0
+}
+
+# If the result independent of any particular command is desired, use "_true" as command (first parameter).
+_get_abstractfs_dst() {
+	"$scriptAbsoluteLocation" _get_abstractfs_dst_sequence "$@"
+}
+_get_abstractfs() {
+	_get_abstractfs_dst "$@"
+}
+
+
+
+_get_abstractfs_src_procedure() {
+	shift
+	_abstractfs 'ub_abstractfs_getOnly_src' "$@"
+}
+_get_abstractfs_src_sequence() {
+	_start
+	_get_abstractfs_src_procedure "$@"
+	_stop 0
+}
+# If the result independent of any particular command is desired, use "_true" as command (first parameter).
+_get_abstractfs_src() {
+	"$scriptAbsoluteLocation" _get_abstractfs_src_sequence "$@"
+}
+
+_get_base_abstractfs() {
+	_get_abstractfs_src "$@"
+}
+_get_base_abstractfs_name() {
+	local current_abstractfs_base
+	current_abstractfs_base=$(_get_abstractfs_src "$@")
+	basename "$current_abstractfs_base"
+}
+
+
+
+
+
+# No known production use.
+# ATTENTION Overload ONLY if further specialization is actually required!
+# WARNING: Input parameters must NOT include neighboring ConfigurationLookupDirectory, regardless of whether static ConfigurationLookupDirectory is used.
+_prepare_abstractfs_appdir_none() {
+	_set_abstractfs_AbstractSourceDirectory "$@"
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory
+	
+	##### # ATTENTION: Prior to abstractfs. 'ApplicationProjectDirectory', ConfigurationLookupDirectory.
+	
+	#export ubASD="$ubASD"
+	
+	export ubASD_PRJ="$ubASD_PRJ_none"
+	#export ubASD_PRJ="$ubASD_PRJ_independent"
+	#export ubASD_PRJ="$ubASD_PRJ_shared"
+	#export ubASD_PRJ="$ubASD_PRJ_export"
+	
+	export ubASD_CLD="$ubASD_CLD_none"
+	#export ubASD_CLD="$ubASD_CLD_independent"
+	#export ubASD_CLD="$ubASD_CLD_shared"
+	#export ubASD_CLD="$ubASD_CLD_export"
+	
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior
+	
+	
+	
+	
+	# CLD_none , CLD_independent , CLD_export
+	_set_abstractfs_disable_CLD
+	
+	# CLD_shared
+	#_set_abstractfs_enable_CLD
+	
+	_prepare_abstractfs_appdir "$@"
+	
+	
+	# CAUTION: May be invalid. Do not use or enable. For reference only.
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_none_sub"
+	##export ubADD_CLD="$ubADD""$ubADD_CLD_independent_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	export ubAFS_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	
+	export ubAFS_CLD="$ubADD""$ubADD_CLD_none_sub"
+	#export ubAFS_CLD="$ubASD_CLD_independent"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#_probe_prepare_abstractfs_appdir_post
+}
+# MISUSE. Permissible, given rare requirement to ensure directories exist to perform common directory determination.
+_set_abstractfs_appdir_none() {
+	_prepare_abstractfs_appdir_none "$@"
+}
+
+
+
+
+
+# No known production use.
+# ATTENTION Overload ONLY if further specialization is actually required!
+# WARNING: Input parameters must NOT include neighboring ConfigurationLookupDirectory, regardless of whether static ConfigurationLookupDirectory is used.
+_prepare_abstractfs_appdir_independent() {
+	_set_abstractfs_AbstractSourceDirectory "$@"
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory
+	
+	##### # ATTENTION: Prior to abstractfs. 'ApplicationProjectDirectory', ConfigurationLookupDirectory.
+	
+	#export ubASD="$ubASD"
+	
+	#export ubASD_PRJ="$ubASD_PRJ_none"
+	export ubASD_PRJ="$ubASD_PRJ_independent"
+	#export ubASD_PRJ="$ubASD_PRJ_shared"
+	#export ubASD_PRJ="$ubASD_PRJ_export"
+	
+	#export ubASD_CLD="$ubASD_CLD_none"
+	export ubASD_CLD="$ubASD_CLD_independent"
+	#export ubASD_CLD="$ubASD_CLD_shared"
+	#export ubASD_CLD="$ubASD_CLD_export"
+	
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior
+	
+	
+	
+	
+	# CLD_none , CLD_independent , CLD_export
+	_set_abstractfs_disable_CLD
+	
+	# CLD_shared
+	#_set_abstractfs_enable_CLD
+	
+	_prepare_abstractfs_appdir "$@"
+	
+	
+	# CAUTION: May be invalid. Do not use or enable. For reference only.
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_none_sub"
+	##export ubADD_CLD="$ubADD""$ubADD_CLD_independent_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	export ubAFS_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_none_sub"
+	export ubAFS_CLD="$ubASD_CLD_independent"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#_probe_prepare_abstractfs_appdir_post
+}
+# MISUSE. Permissible, given rare requirement to ensure directories exist to perform common directory determination.
+_set_abstractfs_appdir_independent() {
+	_prepare_abstractfs_appdir_independent "$@"
+}
+
+
+
+
+
+# No known production use.
+# ATTENTION Overload ONLY if further specialization is actually required!
+# WARNING: Input parameters must NOT include neighboring ConfigurationLookupDirectory, regardless of whether static ConfigurationLookupDirectory is used.
+# DANGER: Strongly discouraged. May break use of "project.afs" with alternative layouts and vice versa.
+_prepare_abstractfs_appdir_shared() {
+	_set_abstractfs_AbstractSourceDirectory "$@"
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory
+	
+	##### # ATTENTION: Prior to abstractfs. 'ApplicationProjectDirectory', ConfigurationLookupDirectory.
+	
+	#export ubASD="$ubASD"
+	
+	#export ubASD_PRJ="$ubASD_PRJ_none"
+	#export ubASD_PRJ="$ubASD_PRJ_independent"
+	export ubASD_PRJ="$ubASD_PRJ_shared"
+	#export ubASD_PRJ="$ubASD_PRJ_export"
+	
+	#export ubASD_CLD="$ubASD_CLD_none"
+	#export ubASD_CLD="$ubASD_CLD_independent"
+	export ubASD_CLD="$ubASD_CLD_shared"
+	#export ubASD_CLD="$ubASD_CLD_export"
+	
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior
+	
+	
+	
+	
+	# CLD_none , CLD_independent , CLD_export
+	#_set_abstractfs_disable_CLD
+	
+	# CLD_shared
+	_set_abstractfs_enable_CLD
+	
+	_prepare_abstractfs_appdir "$@"
+	
+	
+	# CAUTION: May be invalid. Do not use or enable. For reference only.
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_none_sub"
+	##export ubADD_CLD="$ubADD""$ubADD_CLD_independent_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	export ubAFS_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_none_sub"
+	#export ubAFS_CLD="$ubASD_CLD_independent"
+	export ubAFS_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#_probe_prepare_abstractfs_appdir_post
+}
+# MISUSE. Permissible, given rare requirement to ensure directories exist to perform common directory determination.
+_set_abstractfs_appdir_shared() {
+	_prepare_abstractfs_appdir_shared "$@"
+}
+
+
+
+
+
+# No known production use.
+# ATTENTION Overload ONLY if further specialization is actually required!
+# WARNING: Input parameters must NOT include neighboring ConfigurationLookupDirectory, regardless of whether static ConfigurationLookupDirectory is used.
+_prepare_abstractfs_appdir_export() {
+	_set_abstractfs_AbstractSourceDirectory "$@"
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory
+	
+	##### # ATTENTION: Prior to abstractfs. 'ApplicationProjectDirectory', ConfigurationLookupDirectory.
+	
+	#export ubASD="$ubASD"
+	
+	#export ubASD_PRJ="$ubASD_PRJ_none"
+	#export ubASD_PRJ="$ubASD_PRJ_independent"
+	#export ubASD_PRJ="$ubASD_PRJ_shared"
+	export ubASD_PRJ="$ubASD_PRJ_export"
+	
+	#export ubASD_CLD="$ubASD_CLD_none"
+	#export ubASD_CLD="$ubASD_CLD_independent"
+	#export ubASD_CLD="$ubASD_CLD_shared"
+	export ubASD_CLD="$ubASD_CLD_export"
+	
+	#_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior
+	
+	
+	
+	
+	# CLD_none , CLD_independent , CLD_export
+	_set_abstractfs_disable_CLD
+	
+	# CLD_shared
+	#_set_abstractfs_enable_CLD
+	
+	_prepare_abstractfs_appdir "$@"
+	
+	
+	# CAUTION: May be invalid. Do not use or enable. For reference only.
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	#export ubADD_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_none_sub"
+	##export ubADD_CLD="$ubADD""$ubADD_CLD_independent_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	#export ubADD_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_none_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_independent_sub"
+	#export ubAFS_PRJ="$ubADD""$ubADD_PRJ_shared_sub"
+	export ubAFS_PRJ="$ubADD""$ubADD_PRJ_export_sub"
+	
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_none_sub"
+	#export ubAFS_CLD="$ubASD_CLD_independent"
+	#export ubAFS_CLD="$ubADD""$ubADD_CLD_shared_sub"
+	export ubAFS_CLD="$ubADD""$ubADD_CLD_export_sub"
+	
+	
+	#_probe_prepare_abstractfs_appdir_post
+}
+# MISUSE. Permissible, given rare requirement to ensure directories exist to perform common directory determination.
+_set_abstractfs_appdir_export() {
+	_prepare_abstractfs_appdir_export "$@"
+}
+
+
+
+
+
+
+# CAUTION: ConfigurationLookupDirectory, managed by "_appdir" functions, is NOT a global configuration registry. ONLY intended to support programs which may require *project-specific* configuration (eg. Eclipse).
+# WARNING: Input parameters must NOT include neighboring ConfigurationLookupDirectory, regardless of whether static ConfigurationLookupDirectory is used.
+# WARNING: All 'mkdir' operations using "$ubADD" or similar must take place *within* abstractfs, to avoid creating a folder conflicting with the required symlink.
+# Input
+# "$@"
+_set_abstractfs_AbstractSourceDirectory() {
+	# AbstractSourceDirectory
+	_set_abstractfs_disable_CLD
+	export ubASD=$(export afs_nofs_write="true" ; "$scriptAbsoluteLocation" _get_base_abstractfs "$@" "$ub_specimen")
+	_set_abstractfs_disable_CLD
+	export ubASD_name=$(basename $ubASD)
+	
+	# Should never be reached. Also, undesirable default.
+	[[ "$ubASD_name" == "" ]] && export ubASD_name=project
+	
+	
+	# No known production use.
+	export ubADD_CLD_none_sub=""
+	export ubADD_PRJ_none_sub=""
+	export ubASD_CLD_none_sub="$ubADD_CLD_none_sub"
+	export ubASD_CLD_none="$ubASD"
+	export ubASD_PRJ_none=""
+	export ubASD_PRJ_none="$ubASD""$ubASD_PRJ_none"
+	
+	# ApplicationSourceDirectory-ConfigurationLookupDirectory
+	# Project directory is *source* directory.
+	# ConfigurationLookupDirectory is *neighbor*, using absolute path *outside* abstractfs translation.
+	# CAUTION: Not compatible with applications requiring all paths translated by abstractfs.
+	# CAUTION: Invalid to combine "$ubADD" with "$ubADD_CLD_independent_sub" .
+	export ubADD_CLD_independent_sub=/../"$ubASD_name".cld
+	export ubADD_PRJ_independent_sub=""
+	export ubASD_CLD_independent_sub="$ubADD_CLD_independent_sub"
+	export ubASD_CLD_independent="$ubASD""$ubASD_CLD_independent_sub"
+	export ubASD_PRJ_independent_sub=""
+	export ubASD_PRJ_independent="$ubASD""$ubASD_PRJ_independent_sub"
+	
+	# ConfigurationLookupDirectory is *neighbor*, next to project directory, in *shared* abstractfs directory.
+	# DANGER: Strongly discouraged. May break use of "project.afs" with alternative layouts and vice versa.
+	export ubADD_CLD_shared_sub=/"$ubASD_name".cld
+	export ubADD_PRJ_shared_sub=/"$ubASD_name"
+	export ubASD_CLD_shared_sub=/.."$ubADD_CLD_shared_sub"
+	export ubASD_CLD_shared="$ubASD""$ubASD_CLD_shared_sub"
+	export ubASD_PRJ_shared_sub=""
+	export ubASD_PRJ_shared="$ubASD""$ubASD_PRJ_shared_sub"
+	
+	# Internal '_export' folder instead of neighboring ConfigurationLookupDirectory .
+	export ubADD_CLD_export_sub=/_export/afscld
+	export ubADD_PRJ_export_sub=""
+	export ubASD_CLD_export_sub="$ubADD_CLD_export_sub"
+	export ubASD_CLD_export="$ubASD""$ubASD_CLD_export_sub"
+	export ubASD_PRJ_export_sub="$ubASD_CLD_export_sub"
+	export ubASD_PRJ_export="$ubASD"
+}
+
+_set_abstractfs_enable_CLD() {
+	export ubAbstractFS_enable_CLD='true'
+}
+
+_set_abstractfs_disable_CLD() {
+	export ubAbstractFS_enable_CLD='false'
+	
+	# No known production use.
+	export ubAbstractFS_enable_CLDnone='false'
+	export ubAbstractFS_enable_CLDindependent='false'
+	export ubAbstractFS_enable_CLDshared='false'
+	export ubAbstractFS_enable_CLDexport='false'
+}
+
+_prepare_abstractfs_appdir() {
+	mkdir -p "$ubASD"
+	mkdir -p "$ubASD_CLD"
+	#_set_abstractfs_disable_CLD
+	export ubADD=$(export afs_nofs="true" ; "$scriptAbsoluteLocation" _get_abstractfs "$@" "$ub_specimen")
+	#_set_abstractfs_disable_CLD
+}
+
+
+
+
+
+
+
+
+
+
+
+_probe_prepare_abstractfs_appdir_AbstractSourceDirectory() {
+	_messagePlain_nominal '_probe_prepare_abstractfs_appdir_AbstractSourceDirectory'
+	_messagePlain_probe_var ubASD
+	_messagePlain_probe_var ubASD_name
+	
+	_messagePlain_probe_var ubASD_CLD_none_sub
+	_messagePlain_probe_var ubASD_CLD_none
+	
+	_messagePlain_probe_var ubASD_CLD_independent_sub
+	_messagePlain_probe_var ubASD_CLD_independent
+	
+	_messagePlain_probe_var ubASD_CLD_shared_sub
+	_messagePlain_probe_var ubASD_CLD_shared
+	
+	_messagePlain_probe_var ubASD_CLD_export_sub
+	_messagePlain_probe_var ubASD_CLD_export
+}
+
+_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior() {
+	_messagePlain_nominal '_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior'
+	_messagePlain_probe_var ubASD
+	_messagePlain_probe_var ubASD_PRJ
+	_messagePlain_probe_var ubASD_CLD
+}
+
+_probe_prepare_abstractfs_appdir_post() {
+	_messagePlain_nominal '_probe_prepare_abstractfs_appdir_post'
+	_messagePlain_probe_var ubADD
+	#_messagePlain_probe_var ubADD_PRJ
+	#_messagePlain_probe_var ubADD_CLD
+	_messagePlain_probe_var ubAFS_PRJ
+	_messagePlain_probe_var ubAFS_CLD
+}
+
+
+
+_probe_prepare_abstractfs_appdir() {
+	_probe_prepare_abstractfs_appdir_AbstractSourceDirectory
+	_probe_prepare_abstractfs_appdir_AbstractSourceDirectory_prior
+	_probe_prepare_abstractfs_appdir_post
+}
+
+
+_reset_abstractfs() {
+	export abstractfs=
+	export abstractfs_base=
+	export abstractfs_name=
+	export abstractfs_puid=
+	export abstractfs_projectafs=
+	export abstractfs_projectafs_dir=
+}
+
+_prohibit_rmlink_abstractfs() {
+	#mkdir -p "$abstractfs_lock"/"$abstractfs_name"
+	mkdir -p "$abstractfs_lock"/"$abstractfs_name"/"$abstractfs_puid"
+}
+
+_permit_rmlink_abstractfs() {
+	#mkdir -p "$abstractfs_lock"/"$abstractfs_name"
+	rmdir "$abstractfs_lock"/"$abstractfs_name"/"$abstractfs_puid" > /dev/null 2>&1
+}
+
+_wait_rmlink_abstractfs() {
+	! [[ -e "$abstractfs_lock"/"$abstractfs_name"_rmlink ]] && return 0
+	sleep 0.1
+	
+	! [[ -e "$abstractfs_lock"/"$abstractfs_name"_rmlink ]] && return 0
+	sleep 0.3
+	
+	! [[ -e "$abstractfs_lock"/"$abstractfs_name"_rmlink ]] && return 0
+	sleep 1
+	
+	! [[ -e "$abstractfs_lock"/"$abstractfs_name"_rmlink ]] && return 0
+	sleep 3
+	
+	! [[ -e "$abstractfs_lock"/"$abstractfs_name"_rmlink ]] && return 0
+	return 1
+}
+
+_rmlink_abstractfs() {
+	mkdir -p "$abstractfs_lock"
+	_permit_rmlink_abstractfs
+	
+	! _wait_rmlink_abstractfs && return 1
+	
+	echo > "$abstractfs_lock"/"$abstractfs_name"_rmlink
+	
+	rmdir "$abstractfs_lock"/"$abstractfs_name" >/dev/null 2>&1 && _rmlink "$abstractfs"
+	rmdir "$abstractfs_root" >/dev/null 2>&1
+	
+	rm "$abstractfs_lock"/"$abstractfs_name"_rmlink
+}
+
+_relink_abstractfs() {
+	! _wait_rmlink_abstractfs && return 1
+	
+	mkdir -p "$abstractfs_lock"
+	_prohibit_rmlink_abstractfs
+	
+	! _wait_rmlink_abstractfs && return 1
+	
+	_relink "$sharedHostProjectDir" "$sharedGuestProjectDir"
+}
+
+#Precaution. Should not be a requirement in any production use.
+_set_share_abstractfs_reset() {
+	export sharedHostProjectDir="$sharedHostProjectDirDefault"
+	export sharedGuestProjectDir="$sharedGuestProjectDirDefault"
+}
+
+# ATTENTION: Overload with "core.sh".
+_set_share_abstractfs() {
+	_set_share_abstractfs_reset
+	
+	# ATTENTION: Using absolute folder, may preserve apparent parent directory name at the expense of reducing likelihood of 8.3 compatibility.
+	#./ubiquitous_bash.sh _abstractfs ls -lad ./.
+	#/dev/shm/uk4u/randomid/.
+	#/dev/shm/uk4u/randomid/ubiquitous_bash
+	export sharedHostProjectDir="$abstractfs_base"
+	#export sharedHostProjectDir=$(_getAbsoluteFolder "$abstractfs_base")
+	
+	export sharedGuestProjectDir="$abstractfs"
+	
+	#Blank default. Resolves to lowest directory shared by "$PWD" and "$@" .
+	#export sharedHostProjectDir="$sharedHostProjectDirDefault"
+}
+
+_describe_abstractfs() {
+	local localFunctionEntryPWD
+	localFunctionEntryPWD="$PWD"
+	
+	local testAbstractfsBase
+	testAbstractfsBase="$abstractfs_base"
+	[[ "$1" != "" ]] && testAbstractfsBase=$(_getAbsoluteLocation "$1")
+	
+	basename "$testAbstractfsBase"
+	! cd "$testAbstractfsBase" >/dev/null 2>&1 && cd "$localFunctionEntryPWD" && return 1
+	git rev-parse --abbrev-ref HEAD 2>/dev/null
+	#git remote show origin 2>/dev/null
+	git config --get remote.origin.url
+	
+	cd "$localFunctionEntryPWD"
+}
+
+_base_abstractfs() {
+	export abstractfs_base=
+	[[ "$@" != "" ]] && export abstractfs_base=$(_searchBaseDir "$@")
+	[[ "$abstractfs_base" == "" ]] && export abstractfs_base=$(_searchBaseDir "$@" "$virtUserPWD")
+}
+
+_findProjectAFS_procedure() {
+	[[ "$ub_findProjectAFS_maxheight" -gt "120" ]] && return 1
+	let ub_findProjectAFS_maxheight="$ub_findProjectAFS_maxheight"+1
+	export ub_findProjectAFS_maxheight
+	
+	if [[ -e "./project.afs" ]]
+	then
+		_getAbsoluteLocation "./project.afs"
+		export abstractfs_projectafs_dir=$(_getAbsoluteFolder "./project.afs")
+		return 0
+	fi
+	
+	[[ "$1" == "/" ]] && return 1
+	
+	! cd .. > /dev/null 2>&1 && return 1
+	
+	_findProjectAFS_procedure
+}
+
+#Recursively searches for directories containing "project.afs".
+_findProjectAFS() {
+	local localFunctionEntryPWD
+	localFunctionEntryPWD="$PWD"
+	
+	cd "$1"
+	
+	_findProjectAFS_procedure
+	
+	cd "$localFunctionEntryPWD"
+}
+
+_projectAFS_here() {
+	cat << CZXWXcRMTo8EmM8i4d
+#!/usr/bin/env bash
+
+# $abstractfs_root/$abstractfs_name
+
+export abstractfs_name="$abstractfs_name"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if [[ "\$1" != "--noexec" ]]
+then
+	
+#####
+CZXWXcRMTo8EmM8i4d
+
+
+	declare -f _getScriptAbsoluteLocation
+	declare -f _getScriptAbsoluteFolder
+	
+	
+	
+	declare -f _checkBaseDirRemote_common_localOnly
+	declare -f _checkBaseDirRemote_common_remoteOnly
+	
+	
+	
+	declare -f _checkBaseDirRemote
+	
+	
+	
+	declare -f _compat_realpath
+	declare -f _compat_realpath_run
+	
+	declare -f _getAbsoluteLocation
+	declare -f _realpath_L_s
+	declare -f _getAbsoluteFolder
+	
+	
+	declare -f _findDir
+	
+	
+	
+	declare -f _safeEcho_newline
+	
+	declare -f _searchBaseDir
+	
+	
+	
+	declare -f _checkBaseDirRemote
+	#_declare -f _safeEcho_newline
+	declare -f _safeEcho
+	
+	declare -f _localDir
+	
+	
+	
+	#_declare -f _safeEcho_newline
+	
+	
+	
+	#_declare -f _safeEcho_newline
+	
+	declare -f _slashBackToForward
+	
+	
+	
+	declare -f _checkBaseDirRemote_app_localOnly
+	declare -f _checkBaseDirRemote_app_remoteOnly
+	declare -f _pathPartOf
+	declare -f _realpath_L
+	
+	declare -f _virtUser
+	
+	
+	
+	declare -f _x11_clipboard_sendText
+	declare -f _removeFilePrefix
+	
+
+cat << CZXWXcRMTo8EmM8i4d	
+	
+#####
+	
+	
+#####
+	
+	cd "\$(_getScriptAbsoluteFolder)"
+	
+	
+	export standalone_abstractfs="$abstractfs_root"/"$abstractfs_name"
+	export standalone_abstractfs_base=\$(_getScriptAbsoluteFolder)
+	
+	
+	export sharedHostProjectDir="\$standalone_abstractfs_base"
+	export sharedGuestProjectDir="\$standalone_abstractfs"
+	
+	current_x11_clipboard=\$(xclip -out -selection clipboard)
+	current_x11_clipboard=\$(_removeFilePrefix "\$current_x11_clipboard")
+	
+	# Replace (if relevant) ./../.. ... /../home/user/ ... with /home/"\$USER"/ .
+	#current_x11_clipboard=\${current_x11_clipboard/*\/home\//\/home\/}
+	#current_x11_clipboard=\$(_safeEcho "\$current_x11_clipboard" | sed 's/^\([\.\/]\)*home\//\/home\//')
+	#current_x11_clipboard=\$(_safeEcho "\$current_x11_clipboard" | sed 's/^\([\.\/]\)*home\/'"\$USER"'/\/home\/'"\$USER"'/')
+	#current_x11_clipboard=\$(_safeEcho "\$current_x11_clipboard" | sed 's/^\([\.\/]\)*home\/[a-zA-Z0-9_\-]*/\/home\/'"\$USER"'/')
+	current_x11_clipboard=\$(_safeEcho "\$current_x11_clipboard" | sed 's/^\([\.\/]\)*home\/[^/]*/\/home\/'"\$USER"'/')
+	
+	#if [[ -e "\${processedArgs[0]}" ]]
+	if [[ -e "\$current_x11_clipboard" ]]
+	then
+		_virtUser "\$current_x11_clipboard"
+		_safeEcho "\${processedArgs[0]}" | _x11_clipboard_sendText
+	fi
+fi
+
+CZXWXcRMTo8EmM8i4d
+}
+
+_write_projectAFS() {
+	local testAbstractfsBase
+	testAbstractfsBase="$abstractfs_base"
+	[[ "$1" != "" ]] && testAbstractfsBase=$(_getAbsoluteLocation "$1")
+	
+	# ATTENTION: Hardcoded paths to prevent accidental creation of 'project.afs' file in user's home or similar directories
+	# Keep in mind even within a 'chroot' or similar virtualized environment, a 'project' directory would typically be used.
+	[[ "$testAbstractfsBase" == /home/"$USER" ]] && return 1
+	[[ "$testAbstractfsBase" == /home/"$USER"/ ]] && return 1
+	[[ "$testAbstractfsBase" == /root ]] && return 1
+	[[ "$testAbstractfsBase" == /root/ ]] && return 1
+	[[ "$testAbstractfsBase" == /tmp ]] && return 1
+	[[ "$testAbstractfsBase" == /tmp/ ]] && return 1
+	[[ "$testAbstractfsBase" == /dev ]] && return 1
+	[[ "$testAbstractfsBase" == /dev/ ]] && return 1
+	[[ "$testAbstractfsBase" == /dev/shm ]] && return 1
+	[[ "$testAbstractfsBase" == /dev/shm/ ]] && return 1
+	[[ "$testAbstractfsBase" == / ]] && return 1
+	
+	( [[ "$nofs" == "true" ]] || [[ "$afs_nofs" == "true" ]] || [[ "$nofs_write" == "true" ]] || [[ "$afs_nofs_write" == "true" ]] ) && return 0
+	_projectAFS_here > "$testAbstractfsBase"/project.afs
+	chmod u+x "$testAbstractfsBase"/project.afs
+}
+
+# DANGER: Mandatory strict directory 8.3 compliance for this variable! Long subdirectory/filenames permitted thereafter.
+_default_name_abstractfs() {
+	#If "$abstractfs_name" is not saved to file, a consistent, compressed, naming scheme, is required.
+	if ( [[ "$nofs" == "true" ]] || [[ "$afs_nofs" == "true" ]] )
+	then
+		#echo $(basename "$abstractfs_base") | md5sum | head -c 8
+		_describe_abstractfs "$@" | md5sum | _filter_random | head -c 8
+		return
+	fi
+	
+	cat /dev/urandom 2> /dev/null | base64 2> /dev/null | tr -dc 'a-z' 2> /dev/null | head -c "1" | _filter_random 2> /dev/null
+	#cat /dev/urandom 2> /dev/null | base64 2> /dev/null | tr -dc 'a-z0-9' 2> /dev/null | head -c "7"  | _filter_random 2> /dev/null
+	_uid 7
+}
+
+#"$1" == "$abstractfs_base" || ""
+_name_abstractfs() {
+	export abstractfs_name=
+	
+	local testAbstractfsBase
+	testAbstractfsBase="$abstractfs_base"
+	[[ "$1" != "" ]] && testAbstractfsBase=$(_getAbsoluteLocation "$1")
+	
+	export abstractfs_projectafs=$(_findProjectAFS "$testAbstractfsBase")
+	[[ "$abstractfs_projectafs" != "" ]] && [[ -e "$abstractfs_projectafs" ]] && . "$abstractfs_projectafs" --noexec
+	
+	if [[ "$abstractfs_name" == "" ]]
+	then
+		export abstractfs_name=$(_default_name_abstractfs "$testAbstractfsBase")
+		if ( [[ "$nofs" == "true" ]] || [[ "$afs_nofs" == "true" ]] )
+		then
+			echo "$abstractfs_name"
+			return
+		fi
+		_write_projectAFS "$testAbstractfsBase"
+		export abstractfs_name=
+	fi
+	
+	export abstractfs_projectafs=$(_findProjectAFS "$testAbstractfsBase")
+	[[ "$abstractfs_projectafs" != "" ]] && [[ -e "$abstractfs_projectafs" ]] && . "$abstractfs_projectafs" --noexec
+	
+	( [[ "$nofs" == "true" ]] || [[ "$afs_nofs" == "true" ]] ) && [[ ! -e "$abstractfs_projectafs" ]] && return 1
+	[[ "$abstractfs_name" == "" ]] && return 1
+	
+	echo "$abstractfs_name"
+	return 0
+}
+
 _resetFakeHomeEnv_extra() {
 	true
 }
@@ -4782,6 +6244,216 @@ _resetFakeHomeEnv() {
 	
 	_resetFakeHomeEnv_nokeep
 } 
+
+
+
+_write_wslconfig() {
+    ! _if_cygwin && _messagePlain_bad 'fail: Cygwin/MSW only' && return 1
+    if _if_cygwin
+    then
+        _here_wsl_config "$1" > "$USERPROFILE"/.wslconfig
+        return
+    fi
+}
+
+
+
+
+
+# End user function .
+_setup_wsl2_procedure() {
+    ! _if_cygwin && _messagePlain_bad 'fail: Cygwin/MSW only' && return 1
+    
+    _messageNormal 'init: _setup_wsl2'
+    
+    _messagePlain_nominal 'setup: write: _write_msw_WSLENV'
+    _write_msw_WSLENV
+
+    _messagePlain_nominal 'setup: write: _write_msw_wslconfig'
+    _write_wslconfig "ub_ignore_kernel_wsl"
+
+    _messagePlain_nominal 'setup: wsl2'
+    
+    # https://www.omgubuntu.co.uk/how-to-install-wsl2-on-windows-10
+    
+    _messagePlain_probe dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+
+    _messagePlain_probe dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+    _messagePlain_probe wsl --set-default-version 2
+    wsl --set-default-version 2
+
+    _messagePlain_probe wsl --update
+    wsl --update
+
+    sleep 45
+    wsl --update
+
+    sleep 5
+    wsl --update
+
+    sleep 5
+    wsl --update
+}
+_setup_wsl2() {
+    "$scriptAbsoluteLocation" _setup_wsl2_procedure "$@"
+}
+_setup_wsl() {
+    _setup_wsl2 "$@"
+}
+
+
+
+
+
+
+
+
+
+_here_wsl_config() {
+    cat << 'CZXWXcRMTo8EmM8i4d'
+[wsl2]
+memory=999GB
+CZXWXcRMTo8EmM8i4d
+
+    if [[ -e /cygdrive/c/core/infrastructure/ubdist-kernel/ubdist-kernel ]] && [[ "$1" != "ub_ignore_kernel_wsl" ]]
+    then
+        echo 'kernel=C:\\core\\infrastructure\\ubdist-kernel\\ubdist-kernel'
+    fi
+
+    echo
+}
+
+
+_here_wsl_conf() {
+    cat << 'CZXWXcRMTo8EmM8i4d'
+
+[boot]
+systemd = true
+command = /bin/bash -c 'systemctl stop sddm ; rm -f /root/_rootGrab.sh ; usermod -a -G kvm user ; chown -v root:kvm /dev/kvm ; chmod 660 /dev/kvm ; ( rm /home/user/___quick/mount.sh ; rmdir /home/user/___quick ; ( [[ ! -e /home/user/___quick ]] && ln -s /mnt/c/q /home/user/___quick ) ; rm -f /home/user/___quick/q )'
+
+[user]
+default = user
+
+[wsl2]
+nestedVirtualization=true
+
+[automount]
+options = "metadata"
+
+CZXWXcRMTo8EmM8i4d
+}
+
+
+
+
+
+
+
+
+
+_here_wsl_qt5ct_conf() {
+    cat << 'CZXWXcRMTo8EmM8i4d'
+
+[Appearance]
+color_scheme_path=/usr/share/qt5ct/colors/airy.conf
+custom_palette=false
+icon_theme=breeze-dark
+standard_dialogs=default
+style=Breeze
+
+[Interface]
+activate_item_on_single_click=1
+buttonbox_layout=0
+cursor_flash_time=1000
+dialog_buttons_have_icons=1
+double_click_interval=400
+gui_effects=@Invalid()
+keyboard_scheme=2
+menus_have_icons=true
+show_shortcuts_in_context_menus=true
+stylesheets=@Invalid()
+toolbutton_style=4
+underline_shortcut=1
+wheel_scroll_lines=3
+
+[Troubleshooting]
+force_raster_widgets=1
+ignored_applications=@Invalid()
+
+CZXWXcRMTo8EmM8i4d
+}
+
+_write_wsl_qt5ct_conf() {
+    if [[ "$HOME" == "/root" ]] || [[ $(id -u) == 0 ]]
+    then
+        return 1
+    fi
+
+    local currentHome
+    currentHome="$HOME"
+    [[ "$currentHome" == "/root" ]] && currentHome="/home/user"
+    [[ "$1" != "" ]] && currentHome="$1"
+
+    [[ -e "$currentHome"/.config/qt5ct/qt5ct.conf ]] && return 0
+    
+    mkdir -p "$currentHome"/.config/qt5ct
+    mkdir -p "$currentHome"/.config/qt5ct/colors
+    mkdir -p "$currentHome"/.config/qt5ct/qss
+    
+    _here_wsl_qt5ct_conf > "$currentHome"/.config/qt5ct/qt5ct.conf
+
+    [[ -e "$currentHome"/.config/qt5ct/qt5ct.conf ]] && return 0
+
+    return 1
+}
+
+
+
+# WARNING: Experimental. Installer use only. May cause issues with applications running natively from the MSW side. Fortunately, it seems QT_QPA_PLATFORMTHEME is ignored if qt5ct is not present, as expected in the case of 'native' QT MSW applications.
+_write_msw_qt5ct() {
+    setx QT_QPA_PLATFORMTHEME qt5ct /m
+}
+
+# https://www.ibm.com/docs/en/sva/7.0.0?topic=SSPREK_7.0.0/com.ibm.isam.doc_80/ameb_audit_guide/concept/con_lang_var_win.htm
+# Seems 'LANG=C' would also be a normal setting for MSW .
+# nix-shell --run "locale -a" -p bash
+#  C   C.utf8   POSIX
+_write_msw_LANG() {
+    setx LANG C /m
+}
+
+
+# KDE Plasma, FreeCAD, etc, may not be usable without usable OpenGL .
+# https://github.com/microsoft/wslg/wiki/GPU-selection-in-WSLg
+_write_msw_discreteGPU() {
+    #glxinfo -B | grep -i intel > /dev/null 2>&1 && setx MESA_D3D12_DEFAULT_ADAPTER_NAME NVIDIA /m
+    
+    "$(cygpath -S)"/wbem/wmic.exe path win32_VideoController get name | grep -i 'intel' > /dev/null 2>&1 && "$(cygpath -S)"/wbem/wmic.exe path win32_VideoController get name | grep -i 'nvidia' > /dev/null 2>&1 && setx MESA_D3D12_DEFAULT_ADAPTER_NAME NVIDIA /m
+}
+
+
+_write_msw_WSLENV() {
+    _messagePlain_request 'request: If the value of system variable WSLENV is important to you, the previous value is noted here.'
+    _messagePlain_probe_var WSLENV
+    
+    _write_msw_qt5ct
+    #setx WSLENV QT_QPA_PLATFORMTHEME /m
+
+    _write_msw_LANG
+    #setx WSLENV LANG /m
+
+    _write_msw_discreteGPU
+    #setx MESA_D3D12_DEFAULT_ADAPTER_NAME NVIDIA /m
+
+    #setx WSLENV LANG:QT_QPA_PLATFORMTHEME:MESA_D3D12_DEFAULT_ADAPTER_NAME /m
+
+    setx WSLENV LANG:QT_QPA_PLATFORMTHEME:MESA_D3D12_DEFAULT_ADAPTER_NAME:GH_TOKEN /m
+}
+
+
 
 #####Shortcuts
 
@@ -8068,6 +9740,229 @@ export ub_anchor_user
 
 export ub_anchor_autoupgrade=""
 export ub_anchor_autoupgrade
+
+
+
+#Machine information.
+
+if [[ -e "/proc/meminfo" ]]
+then
+	export hostMemoryTotal=$(cat /proc/meminfo | grep MemTotal | tr -cd '[[:digit:]]')
+	export hostMemoryAvailable=$(cat /proc/meminfo | grep MemAvailable | tr -cd '[[:digit:]]')
+	export hostMemoryQuantity="$hostMemoryTotal"
+else
+	export hostMemoryTotal="384000"
+	export hostMemoryAvailable="256000"
+	export hostMemoryQuantity="$hostMemoryTotal"
+fi
+
+export virtGuestUserDrop="ubvrtusr"
+export virtGuestUser="$virtGuestUserDrop"
+[[ "$HOST_USER_ID" == 0 ]] && export virtGuestUser="root"
+
+export globalVirtDir="$scriptLocal"/v
+export globalVirtFS="$globalVirtDir"/fs
+export globalVirtTmp="$globalVirtDir"/tmp
+
+export instancedVirtDir="$tmpSelf"/v_"$sessionid"
+export instancedVirtFS="$instancedVirtDir"/fs
+export instancedVirtTmp="$instancedVirtDir"/tmp
+
+export virtGuestHomeDrop=/home/"$virtGuestUserDrop"
+export virtGuestHome="$virtGuestHomeDrop"
+[[ "$HOST_USER_ID" == 0 ]] && export virtGuestHome=/root
+###export virtGuestHomeRef="$virtGuestHome".ref
+
+export instancedVirtHome="$instancedVirtFS""$virtGuestHome"
+###export instancedVirtHomeRef="$instancedVirtHome".ref
+
+export sharedHostProjectDirDefault=""
+export sharedGuestProjectDirDefault="$virtGuestHome"/project
+
+export sharedHostProjectDir="$sharedHostProjectDirDefault"
+export sharedGuestProjectDir="$sharedGuestProjectDirDefault"
+
+export instancedProjectDir="$instancedVirtHome"/project
+export instancedDownloadsDir="$instancedVirtHome"/Downloads
+
+export chrootDir="$globalVirtFS"
+export vboxRaw="$scriptLocal"/vmvdiraw.vmdk
+
+#Only globalFakeHome is persistent. All other default home directories are removed in some way by "_stop".
+export globalFakeHome="$scriptLocal"/h
+export instancedFakeHome="$tmpSelf"/h_"$sessionid"
+export shortFakeHome="$shortTmp"/h
+
+#Do not use directly as home directory. Append subdirectories.
+export arbitraryFakeHome="$shortTmp"/a
+
+#Default, override.
+# WARNING: Do not disable.
+export actualFakeHome="$instancedFakeHome"
+export fakeHomeEditLib="false"
+export keepFakeHome="true"
+
+#Automatically assigns appropriate memory quantities to nested virtual machines.
+_vars_vmMemoryAllocationDefault() {
+	export vmMemoryAllocationDefault=96
+	
+	
+	# Invalid.
+	[[ "$hostMemoryQuantity" -lt "64000" ]] && return 1
+	! [[ "$hostMemoryQuantity" -ge "64000" ]] && return 1
+	
+	
+	# Embedded host typical.
+	[[ "$hostMemoryQuantity" -lt "500000" ]] && export vmMemoryAllocationDefault=256 && return 1
+	
+	# Obsolete hardware or guest typical.
+	[[ "$hostMemoryQuantity" -lt "1256000" ]] && export vmMemoryAllocationDefault=512 && return 0
+	[[ "$hostMemoryQuantity" -lt "1768000" ]] && export vmMemoryAllocationDefault=1024 && return 0
+	[[ "$hostMemoryQuantity" -lt "6000000" ]] && export vmMemoryAllocationDefault=1512 && return 0
+	
+	# Modern host typical.
+	[[ "$hostMemoryQuantity" -lt "7000000" ]] && export vmMemoryAllocationDefault=2048 && return 0
+	[[ "$hostMemoryQuantity" -lt "18000000" ]] && export vmMemoryAllocationDefault=2560 && return 0
+	[[ "$hostMemoryQuantity" -lt "34000000" ]] && export vmMemoryAllocationDefault=3072 && return 0
+	
+	# Workstation typical.
+	[[ "$hostMemoryQuantity" -lt "72000000" ]] && export vmMemoryAllocationDefault=4096 && return 0
+	[[ "$hostMemoryQuantity" -lt "132000000" ]] && export vmMemoryAllocationDefault=4096 && return 0
+	
+	# Atypical host.
+	export vmMemoryAllocationDefault=4096 && return 0
+	
+	return 1
+}
+
+#Machine allocation defaults.
+_vars_vmMemoryAllocationDefault
+
+
+# ATTENTION: Forces 'x64-efi' if 'Windows11' or similar is declared as 'vboxOStype'.
+if [[ "$ubVirtPlatformOverride" == "" ]]
+then
+	[[ "$vboxOStype" == "Win"*"10"* ]] && export ubVirtPlatformOverride="x64-efi"
+	[[ "$vboxOStype" == "Win"*"11"* ]] && export ubVirtPlatformOverride="x64-efi"
+fi
+
+
+export hostToGuestDir="$instancedVirtDir"/htg
+export hostToGuestFiles="$hostToGuestDir"/files
+export hostToGuestISO="$instancedVirtDir"/htg/htg.iso 
+
+
+
+_set_msw_qt5ct() {
+    [[ "$QT_QPA_PLATFORMTHEME" != "qt5ct" ]] && export QT_QPA_PLATFORMTHEME=qt5ct
+    if [[ "$WSLENV" != "QT_QPA_PLATFORMTHEME" ]] && [[ "$WSLENV" != "QT_QPA_PLATFORMTHEME"* ]] && [[ "$WSLENV" != *"QT_QPA_PLATFORMTHEME" ]] && [[ "$WSLENV" != *"QT_QPA_PLATFORMTHEME"* ]]
+    then
+        if [[ "$WSLENV" == "" ]]
+        then
+            export WSLENV="QT_QPA_PLATFORMTHEME"
+        else
+            export WSLENV="$WSLENV:QT_QPA_PLATFORMTHEME"
+        fi
+    fi
+    return 0
+}
+
+# wsl printenv | grep QT_QPA_PLATFORMTHEME
+# ATTENTION: Will also unset QT_QPA_PLATFORMTHEME if appropriate (and for this reason absolutely should be hooked by 'Linux' shells).
+# Strongly recommend writing the ' export QT_QPA_PLATFORMTHEME=qt5ct ' or equivalent statement to ' /etc/environment.d/ub_wsl2_qt5ct.sh ' , '/etc/environment.d/90ub_wsl2_qt5ct.conf' , or similarly effective non-login non-interactive shell startup script.
+#  Unfortunately, '/etc/environment.d' is usually ignored by (eg. Debian) Linux distributions, to the point that variables declared by files provided by installed packages are not exported to any apparent environment.
+#  Alternatives attempted include:
+#  /etc/security/pam_env.conf
+#  ~/.bashrc
+#  ~/.bash_profile
+#  ~/.profile
+_set_qt5ct() {
+    if [[ "$DISPLAY" == ":0" ]]
+    then
+        export QT_QPA_PLATFORMTHEME=qt5ct
+    else
+        export QT_QPA_PLATFORMTHEME=
+        unset QT_QPA_PLATFORMTHEME
+    fi
+    
+    _write_wsl_qt5ct_conf "$@"
+
+    return 0
+}
+
+
+_set_msw_lang() {
+    [[ "$LANG" != "C" ]] && export LANG=C
+    if [[ "$WSLENV" != "LANG" ]] && [[ "$WSLENV" != "LANG"* ]] && [[ "$WSLENV" != *"LANG" ]] && [[ "$WSLENV" != *"LANG"* ]]
+    then
+        if [[ "$WSLENV" == "" ]]
+        then
+            export WSLENV="LANG"
+        else
+            export WSLENV="$WSLENV:LANG"
+        fi
+    fi
+    return 0
+}
+
+_set_lang-forWSL() {
+    [[ "$LANG" != "C" ]] && export LANG="C"
+    return 0
+}
+
+
+_set_discreteGPU-forWSL() {
+    [[ "$MESA_D3D12_DEFAULT_ADAPTER_NAME" != "" ]] && return 0
+    
+    # https://github.com/microsoft/wslg/wiki/GPU-selection-in-WSLg
+    glxinfo -B | grep -i intel > /dev/null 2>&1 && export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
+}
+
+_set_msw_ghToken() {
+    if [[ "$WSLENV" != "GH_TOKEN" ]] && [[ "$WSLENV" != "GH_TOKEN"* ]] && [[ "$WSLENV" != *"GH_TOKEN" ]] && [[ "$WSLENV" != *"GH_TOKEN"* ]]
+    then
+        if [[ "$WSLENV" == "" ]]
+        then
+            export WSLENV="GH_TOKEN"
+        else
+            export WSLENV="$WSLENV:GH_TOKEN"
+        fi
+    fi
+    return 0
+}
+
+
+_set_msw_wsl() {
+    ! _if_cygwin && return 1
+
+    _set_msw_lang
+    _set_msw_qt5ct
+
+    _set_msw_ghToken
+
+    return 0
+}
+
+_set_wsl() {
+    ! uname -a | grep -i 'microsoft' > /dev/null 2>&1 && return 1
+    ! uname -a | grep -i 'WSL2' > /dev/null 2>&1 && return 1
+
+    _set_lang-forWSL
+    _set_qt5ct
+
+    [[ "$LIBVA_DRIVER_NAME" != "d3d12" ]] && export LIBVA_DRIVER_NAME=d3d12
+
+    _set_discreteGPU-forWSL
+
+    return 0
+}
+
+
+
+! _set_msw_wsl && _set_wsl
+
+
+
 
 
 
@@ -13768,7 +15663,16 @@ _package() {
 
 
 
-
+_setup-escpos_sequence() {
+	mkdir -p "$scriptLib"/escpos-python
+	
+	cd "$scriptLib"/escpos-python
+	
+	_abstractfs python3 -m venv escpos-python
+}
+_setup-escpos() {
+	"$scriptAbsoluteLocation" _setup-escpos_sequence "$@"
+}
 
 
 _setup_prog() {
@@ -13781,10 +15685,17 @@ _setup_prog() {
 	fi
 	
 	
+	# WARNING: Due to versioning in relevant path text, 'python3.11-venv' and similar dependency does NOT have a '_getDep' entry.
+	
+	# libcups2-dev
+	_getDep 'cups/cups.h'
+	
 	# python3-serial
 	_getDep 'pyserial-ports'
 	_getDep 'pyserial-miniterm'
 	_getDep 'python3/dist-packages/serial/__main__.py'
+	
+	_setup-escpos
 }
 
 
@@ -13893,7 +15804,164 @@ _main() {
 	_stop
 }
 
- 
+
+
+
+_set_LinePrinter() {
+	export current_LinePrinter_devfile=""
+	unset current_LinePrinter_devfile
+	
+	export current_LinePrinter_devfile=/dev/ttyS1
+	[[ "$OVERRIDE_LinePrinter_devfile" != "" ]] && export current_LinePrinter_devfile="$OVERRIDE_LinePrinter_devfile"
+	
+	export current_LinePrinter_baud=38400
+	#export current_LinePrinter_baud=115200
+	[[ "$OVERRIDE_LinePrinter_baud" != "" ]] && export current_LinePrinter_devfile="$OVERRIDE_LinePrinter_baud"
+	
+	stty -F "$current_LinePrinter_devfile" "$current_LinePrinter_baud"
+}
+
+
+
+# WARNING: Function '_interact' must NOT be defined 
+_interact() {
+	source ./bin/activate
+	
+	_set_LinePrinter
+	
+	#"$scriptAbsoluteFolder"/print.py '_python()'
+	"$scriptAbsoluteFolder"/print.py '_interact("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+}
+
+
+
+
+
+
+
+_qr_sequence() {
+  _start
+  
+  local current_content
+  current_content=$(_safeEcho_newline "$@")
+  
+  #source ./bin/activate
+  
+  _set_LinePrinter
+  
+  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  
+  #_messagePlain_probe_cmd
+  "$scriptAbsoluteFolder"/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  
+  _stop
+}
+
+_qr() {
+  "$scriptAbsoluteLocation" _qr_sequence "$@"
+}
+
+
+
+
+# NOTICE: STRONGLY DISCOURAGED.
+_barcode_sequence() {
+  _start
+  
+  local current_content
+  current_content=$(_safeEcho_newline "$@")
+  
+  #source ./bin/activate
+  
+  _set_LinePrinter
+  
+  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  
+  #_messagePlain_probe_cmd
+  "$scriptAbsoluteFolder"/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  
+  _stop
+}
+
+_barcode() {
+  "$scriptAbsoluteLocation" _barcode_sequence "$@"
+}
+
+
+
+_seed() {
+	_start
+
+	local current_content
+	current_content=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	#source ./bin/activate
+	
+	_set_LinePrinter
+	
+	_messagePlain_probe "$scriptAbsoluteFolder"/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	
+	#_messagePlain_probe_cmd
+	"$scriptAbsoluteFolder"/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	_stop
+	
+	#local current_seed
+	#current_seed=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
+	_barcode $("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
+}
+
+
+
+
+_print() {
+  _set_LinePrinter
+  
+  if [[ "$1" == "/"* ]] && [[ -e "$1" ]]
+  then
+    cat "$1" | pv -L 300 2>/dev/null > "$current_LinePrinter_devfile"
+    
+    echo -e '\n\n\n' > "$current_LinePrinter_devfile"
+    echo 1B6D | xxd -p -r > "$current_LinePrinter_devfile"
+    return
+  fi
+  
+  _safeEcho "$@" | pv -L 300 2>/dev/null > "$current_LinePrinter_devfile"
+  
+  echo -e '\n\n\n' > "$current_LinePrinter_devfile"
+  echo 1B6D | xxd -p -r > "$current_LinePrinter_devfile"
+}
+
+p() {
+  _set_LinePrinter
+  
+  _print "$@"
+}
+
+_label() {
+  _set_LinePrinter
+  
+  echo '_____________________________________________' > "$current_LinePrinter_devfile"
+  echo -e '\n\n\n' > "$current_LinePrinter_devfile"
+  echo 1B6D | xxd -p -r > "$current_LinePrinter_devfile"
+  
+  _safeEcho "$@" | pv -L 300 2>/dev/null > "$current_LinePrinter_devfile"
+  
+  echo -e '\n\n\n' > "$current_LinePrinter_devfile"
+  echo 1B6D | xxd -p -r > "$current_LinePrinter_devfile"
+}
+
+_tear() {
+  _set_LinePrinter
+  
+  echo -e '\n\n\n' > "$current_LinePrinter_devfile"
+  echo 1B6D | xxd -p -r > "$current_LinePrinter_devfile"
+}
+
+
 
  
 

@@ -61,15 +61,15 @@ _seed() {
 
 
 _refresh_anchors() {
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-barcode
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-magswipe
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-barcode.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-magswipe.bat
 	
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic-barcode
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_basic-magswipe
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_basic.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_basic-barcode.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_basic-magswipe.bat
 	
-	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-wifi
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-wifi.bat
 }
 
 

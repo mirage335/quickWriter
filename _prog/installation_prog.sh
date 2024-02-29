@@ -12,6 +12,9 @@ _test_prog() {
 	if [[ $(echo 'print("true")' | "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 | tr -dc 'a-z') != "true" ]]
 	then
 		echo 'FAIL: venv: python: _lib/escpos-python'
+		_messageFAIL
+		_stop 1
+		return 1
 	fi
 	
 	

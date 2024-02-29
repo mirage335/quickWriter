@@ -86,7 +86,7 @@ _setup_prog() {
 	# WARNING: Due to versioning in relevant path text, 'python3.11-venv' and similar dependency does NOT have a '_getDep' entry.
 	
 	# libcups2-dev
-	_getDep 'cups/cups.h'
+	#_getDep 'cups/cups.h'
 	
 	# python3-serial
 	_getDep 'pyserial-ports'

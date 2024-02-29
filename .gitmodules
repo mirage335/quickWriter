@@ -2,3 +2,6 @@
 	path = _lib/ubiquitous_bash
 	url = git@github.com:mirage335-colossus/ubiquitous_bash.git
 	shallow = true
+[submodule "_lib/MSR605-Card-Reader-Writer-Eraser-with-GUI"]
+	path = _lib/MSR605-Card-Reader-Writer-Eraser-with-GUI
+	url = git@github.com:mirage335/MSR605-Card-Reader-Writer-Eraser-with-GUI.git

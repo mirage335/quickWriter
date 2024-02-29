@@ -60,24 +60,40 @@ See the end of the file for license conditions.
 See license.txt for quickWriter license conditions.
 
 
-Both print to ESCPOS and write to MSR605 magswipe writers. Emphasis on creating titled &#39;_seed&#39; cards with entropy written for frequently changed adequate (ie. long) network (ie. WiFi) security.'
+Both print to ESCPOS and write to MSR605 magswipe writers. Emphasis on creating titled &#39;_seed&#39; cards with entropy written for frequently changed adequate (ie. long) network (ie. WiFi) security.
+
+Third-party python programs for writing to ESCPOS printers and for writing to MSR605 magswipe writers, may be included in this repository, and retain their relevant copyright licenses.
+'
 _t '
 
 
 '
 _heading1 'Usage'
 _paragraph_begin
-_o _messagePlain_probe '_seed'
-_o _messagePlain_probe '_seed-barcode'
+_o _messagePlain_probe '_seed "experiment"'
+_o _messagePlain_probe '_seed-barcode "experiment"'
 _o _messagePlain_probe '_seed-magswipe'
 _paragraph_end
 _paragraph_begin
-_o _messagePlain_probe '_basic'
-_o _messagePlain_probe '_basic-barcode'
-_o _messagePlain_probe '_basic-magswipe'
+_o _messagePlain_probe '_s 33333333333333'
+
+_t 'DANGER: Strongly discouraged. Use barcode and magswipe as separate &#39;sub&#39; phrases instead.'
+_o _messagePlain_probe '_basic "experiment"'
+_o _messagePlain_probe '_basic-barcode "experiment"'
+_o _messagePlain_probe '_basic-magswipe "experiment"'
 _paragraph_end
 _paragraph_begin
-_o _messagePlain_probe '_seed-wifi'
+_t 'DANGER: Strongly discouraged. Use barcode and magswipe as separate &#39;sub&#39; phrases instead.'
+_o _messagePlain_probe '_legacy " 123456789012345678901234" "experiment"'
+_o _messagePlain_probe '_legacy-barcode " 123456789012345678901234" "experiment"'
+_o _messagePlain_probe '_legacy-magswipe " 123456789012345678901234" "experiment"'
+_paragraph_end
+_paragraph_begin
+_o _messagePlain_probe '_seed-wifi experiment [security]'
+_o _messagePlain_probe '_seed-wifi-card experiment [security]'
+_paragraph_end
+_paragraph_begin
+_o _messagePlain_probe '_erase'
 _paragraph_end
 _paragraph_begin
 _t '
@@ -108,7 +124,13 @@ _t '
 _page
 _heading1 'Reference'
 _paragraph_begin
-_t ' '
+_t '
+https://github.com/manwinder123/MSR605-Card-Reader-Writer-Eraser-with-GUI
+https://github.com/manwinder123/MSR605-Card-Reader-Writer-Eraser-with-GUI/issues/4
+
+https://github.com/python-escpos/python-escpos
+https://python-escpos.readthedocs.io/en/latest/
+'
 _paragraph_end
 _t '
 

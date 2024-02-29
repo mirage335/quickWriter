@@ -68,6 +68,10 @@ See license.txt for quickWriter license conditions.
 Both print to ESCPOS and write to MSR605 magswipe writers. Emphasis on 
 creating titled &#39;_seed&#39; cards with entropy written for frequently 
 changed adequate (ie. long) network (ie. WiFi) security.
+
+Third-party python programs for writing to ESCPOS printers and for writing 
+to MSR605 magswipe writers, may be included in this repository, and retain 
+their relevant copyright licenses.
 <!-- # --></pre><!-- scriptedIllustrator_markup_uk4uPhB663kVcygT0q
 '
 _t '
@@ -86,17 +90,17 @@ if false; then true; # -->
 <!-- # --><p>
 <!--
 fi
- '_o' '_messagePlain_probe' '_seed'
+ '_o' '_messagePlain_probe' '_seed "experiment"'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed "experiment"</span>
 <!-- # --></pre>
 <!--
 fi
- '_o' '_messagePlain_probe' '_seed-barcode'
+ '_o' '_messagePlain_probe' '_seed-barcode "experiment"'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed-barcode</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed-barcode "experiment"</span>
 <!-- # --></pre>
 <!--
 fi
@@ -117,24 +121,37 @@ if false; then true; # -->
 <!-- # --><p>
 <!--
 fi
- '_o' '_messagePlain_probe' '_basic'
+ '_o' '_messagePlain_probe' '_s 33333333333333'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _s 33333333333333</span>
 <!-- # --></pre>
 <!--
 fi
- '_o' '_messagePlain_probe' '_basic-barcode'
+_t '
+scriptedIllustrator_markup_uk4uPhB663kVcygT0q --><!-- # --><pre style="margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+DANGER: Strongly discouraged. Use barcode and magswipe as separate 
+&#39;sub&#39; phrases instead.
+<!-- # --></pre><!-- scriptedIllustrator_markup_uk4uPhB663kVcygT0q
+'
+ '_o' '_messagePlain_probe' '_basic "experiment"'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic-barcode</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic "experiment"</span>
 <!-- # --></pre>
 <!--
 fi
- '_o' '_messagePlain_probe' '_basic-magswipe'
+ '_o' '_messagePlain_probe' '_basic-barcode "experiment"'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic-magswipe</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic-barcode "experiment"</span>
+<!-- # --></pre>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_basic-magswipe "experiment"'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _basic-magswipe "experiment"</span>
 <!-- # --></pre>
 <!--
 fi
@@ -148,10 +165,71 @@ if false; then true; # -->
 <!-- # --><p>
 <!--
 fi
- '_o' '_messagePlain_probe' '_seed-wifi'
+_t '
+scriptedIllustrator_markup_uk4uPhB663kVcygT0q --><!-- # --><pre style="margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+DANGER: Strongly discouraged. Use barcode and magswipe as separate 
+&#39;sub&#39; phrases instead.
+<!-- # --></pre><!-- scriptedIllustrator_markup_uk4uPhB663kVcygT0q
+'
+ '_o' '_messagePlain_probe' '_legacy " 123456789012345678901234" "experiment"'
 if false; then true; # -->
 <!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
-<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed-wifi</span>
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _legacy " 123456789012345678901234" "experiment"</span>
+<!-- # --></pre>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_legacy-barcode " 123456789012345678901234" "experiment"'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _legacy-barcode " 123456789012345678901234" "experiment"</span>
+<!-- # --></pre>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_legacy-magswipe " 123456789012345678901234" "experiment"'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _legacy-magswipe " 123456789012345678901234" "experiment"</span>
+<!-- # --></pre>
+<!--
+fi
+ '_paragraph_end'
+if false; then true; # -->
+<!-- # --></p>
+<!--
+fi
+ '_paragraph_begin'
+if false; then true; # -->
+<!-- # --><p>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_seed-wifi experiment [security]'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed-wifi experiment [security]</span>
+<!-- # --></pre>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_seed-wifi-card experiment [security]'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _seed-wifi-card experiment [security]</span>
+<!-- # --></pre>
+<!--
+fi
+ '_paragraph_end'
+if false; then true; # -->
+<!-- # --></p>
+<!--
+fi
+ '_paragraph_begin'
+if false; then true; # -->
+<!-- # --><p>
+<!--
+fi
+ '_o' '_messagePlain_probe' '_erase'
+if false; then true; # -->
+<!-- # --><pre style="-webkit-print-color-adjust: exact;background-color:#848484;margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+<!-- # --><span style="color:#1818b2;background-color:#848484;"> _erase</span>
 <!-- # --></pre>
 <!--
 fi
@@ -249,7 +327,13 @@ if false; then true; # -->
 <!--
 fi
 _t '
-scriptedIllustrator_markup_uk4uPhB663kVcygT0q --><!-- # --><pre style="margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;"> 
+scriptedIllustrator_markup_uk4uPhB663kVcygT0q --><!-- # --><pre style="margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">
+https://github.com/manwinder123/MSR605-Card-Reader-Writer-Eraser-with-GUI
+https://github.com/manwinder123/MSR605-Card-Reader-Writer-Eraser-with-GUI/is
+sues/4
+
+https://github.com/python-escpos/python-escpos
+https://python-escpos.readthedocs.io/en/latest/
 <!-- # --></pre><!-- scriptedIllustrator_markup_uk4uPhB663kVcygT0q
 '
  '_paragraph_end'

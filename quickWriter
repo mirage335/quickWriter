@@ -36,7 +36,7 @@ _ub_cksum_special_derivativeScripts_contents() {
 #export ub_setScriptChecksum_disable='true'
 ( [[ -e "$0".nck ]] || [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [[ "$1" == '--profile' ]] || [[ "$1" == '--script' ]] || [[ "$1" == '--call' ]] || [[ "$1" == '--return' ]] || [[ "$1" == '--devenv' ]] || [[ "$1" == '--shell' ]] || [[ "$1" == '--bypass' ]] || [[ "$1" == '--parent' ]] || [[ "$1" == '--embed' ]] || [[ "$1" == '--compressed' ]] || [[ "$0" == "/bin/bash" ]] || [[ "$0" == "-bash" ]] || [[ "$0" == "/usr/bin/bash" ]] || [[ "$0" == "bash" ]] ) && export ub_setScriptChecksum_disable='true'
 export ub_setScriptChecksum_header='2591634041'
-export ub_setScriptChecksum_contents='2255549173'
+export ub_setScriptChecksum_contents='3085678146'
 
 # CAUTION: Symlinks may cause problems. Disable this test for such cases if necessary.
 # WARNING: Performance may be crucial here.
@@ -15663,16 +15663,77 @@ _package() {
 
 
 
+
+_test_prog() {
+	# venv ... python3 ... print("true") == "true" ...
+	
+	cd "$scriptLib"/escpos-python
+	
+	local current_abstract_PWD
+	current_abstract_PWD=$(_abstractfs bash -c 'echo "$PWD"')
+	
+	if [[ $(echo 'print("true")' | "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 | tr -dc 'a-z') != "true" ]]
+	then
+		echo 'FAIL: venv: python: _lib/escpos-python'
+	fi
+	
+	
+	
+	return 0
+}
+
+
+
+
+
+
+
+# ATTENTION: Unusually, this function may be called before any use of an end-user function. May be, but not necessarily. Thus, must not unnecessarily change a working installtion.
 _setup-escpos_sequence() {
+	_messageNormal 'init: _setup-escpos_sequence'
+	
 	mkdir -p "$scriptLib"/escpos-python
 	
 	cd "$scriptLib"/escpos-python
 	
-	_abstractfs python3 -m venv escpos-python
+	local current_abstract_PWD
+	current_abstract_PWD=$(_abstractfs bash -c 'echo "$PWD"')
+	
+	_messagePlain_probe_var current_abstract_PWD
+	
+	local current_abstract_PWD_absolute
+	current_abstract_PWD_absolute=$(_abstractfs "$scriptAbsoluteLocation" _getAbsoluteLocation "$current_abstract_PWD")
+	
+	_messagePlain_probe_var current_abstract_PWD_absolute
+	
+	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs python3 -m venv "$current_abstract_PWD"/venv_python
+	
+	#source ./bin/activate
+	
+	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m pip install --upgrade pip
+	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m pip --version
+	
+	
+	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m pip install python-escpos[serial,usb]
+	
+	
+	
+	
+	
+	
 }
 _setup-escpos() {
 	"$scriptAbsoluteLocation" _setup-escpos_sequence "$@"
 }
+
+
+
+_setup-msr605() {
+	true
+}
+
+
+
 
 
 _setup_prog() {
@@ -15696,19 +15757,125 @@ _setup_prog() {
 	_getDep 'python3/dist-packages/serial/__main__.py'
 	
 	_setup-escpos
+	
+	_setup-msr605
 }
 
 
 ##### Core
 
 
-_rand_bin() {
+# 0000 (0) = NULL (string termination, do not emit characters at positions set NULL)
+# 0001 (1) = 0-9
+# 0010 (2) = a-z
+# 0100 (4) = A-Z
+# 1000 (8) = '%' IF NOT last character, ELSE '?'
+# 
+# 0011 (3) = a-z0-9
+# 0101 (5) = A-Z0-9
+# 0111 (7) = a-zA-Z0-9
+
+_s() {
+	#BARCODE - basic ONLY. Normally this is the ONLY bitmask to change, and ONLY to address (discouraged) tradeoffs with specialized software.
+	[[ "$1" != "" ]] && export barcode_bitmask="$1"
+	[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=33333333333333
+	#[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=111111111111111111111111
+	
+	#DANGER: Strongly discouraged. Low entropy, for very specialized use only.
+	#[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=111111111111111
+	
+	
+	
+	#MAGSWIPE SEED. No normal reason to change this.
+	[[ "$2" != "" ]] && export magswipe_bitmask="$2"
+	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=55555555555555555555
+	
+	# WiFi SEED. No normal reason to change this.
+	[[ "$3" != "" ]] && export qrcode_bitmask="$3"
+	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=83333333333333333338
+	
+	
+	#BARCODE SEED. No normal reason to change this.
+	[[ "$4" != "" ]] && export barcode_bitmask_seed="$4"
+	[[ "$barcode_bitmask_seed" == "" ]] && export barcode_bitmask_seed=77777777777777
+	
+	true
+}
+
+
+# ^
+
+# NOTICE: DANGER: Minimum examples. Do NOT generate less entropy than offered here.
+
+# DEFAULT WiFi SEED
+#  QRCODE/MAGSWIPE EQUIVALENT.
+# entropy 2^93.06
+#qrcode_bitmask=83333333333333333338
+#qrcode=%AAAA1AAAAA1A1A1AAA?
+#magswipe=$(echo -n "$barcode" | tr 'a-z' 'A-Z' | tr -dc 'a-z0-9')
+
+
+# DEFAULT MAGSWIPE SEED (as either independent 'sub' or combined with BARCODE).
+#  BARCODE/MAGSWIPE NOT equivalent, MAGSWIPE ONLY.
+# entropy 2^103.4
+#magswipe_bitmask=55555555555555555555
+#magswipe=AAAA1AAAAA1A1A1AAAAA
+
+# DEFAULT BARCODE SEED (as either independent 'sub' or combined with MAGSWIPE).
+# KDF strengthening may use this adequately.
+# Fewer keystrokes.
+#  BARCODE/MAGSWIPE NOT equivalent, BARCODE/TEXT ONLY.
+# entropy 2^83.36
+#barcode_bitmask=77777777777777
+#barcode=AaAAAaA1AaAAaA
+
+
+# Online manager for passwords with KDF strengthening may use this adequately. ### Preferable PIN+KDF/HardwareTPM .
+# Fewer keystrokes.
+#  BARCODE/MAGSWIPE EQUIVALENCE REWRITE (ie. use BARCODE characters to rewrite, MAGSWIPE will add '%' , '?').
+# entropy 2^72.38
+#barcode_bitmask=33333333333333
+#barcode=a11aaa1aa1aaaa
+#magswipe=$(echo -n "$barcode" | tr 'a-z' 'A-Z' | tr -dc 'a-z0-9')
+
+# KDF strengthening may use this adequately.
+# Online manager for passwords with KDF strengthening may use this adequately.
+#  BARCODE/MAGSWIPE EQUIVALENCE REWRITE (ie. use BARCODE characters to rewrite, MAGSWIPE will add '%' , '?').
+# entropy ~2^79.73 , ~10^24 , 2^(79.73 + 19) ≈ ~10^29
+#barcode_bitmask=111111111111111111111111
+#barcode=111111111111111111111111
+#magswipe=$(echo -n "$barcode" | tr 'a-z' 'A-Z' | tr -dc 'a-z0-9')
+
+
+
+# Online password. Entropy NOT sufficient to more than delay misuse if offline searchable (ie. published login hashes from compromised server).
+# Complies with common password 'requirements'.
+#  BARCODE/MAGSWIPE EQUIVALENCE LIMITED. Magswipe requires manually typed character.
+#  entropy ~2^62.04 , ~10^18 , 2^(62.04 + 19) ≈ ~10^24
+#barcode_bitmask=48333333333338
+#barcode=A%aaa1a1aa1aa?
+#magswipe=$(echo -n "$barcode" | tr 'a-z' 'A-Z' | tr -dc 'a-z0-9')
+
+
+
+# PIN+KDF possibility expansion. May frustrate misuse if HardwareTPM protected storage of intermediates is exposed (but not if protected storage for a header to a volume is exposed). ### Numeric ONLY PIN+KDF/HardwareTPM .
+# entropy ~2^49.83 , ~10^15 , 2^(49.83 + 19) ≈ ~10^20
+#  BARCODE/MAGSWIPE EQUIVALENCE REWRITE (ie. use BARCODE characters to rewrite, MAGSWIPE will add '%' , '?').
+#barcode_bitmask=111111111111111
+#barcode=111111111111111
+#magswipe=$(echo -n "$barcode" | tr 'a-z' 'A-Z' | tr -dc 'a-z0-9')
+
+
+
+
+
+_extractEntropyAlpha_bin() {
 	local currentPath_bin
 	
 	currentPath_bin="$HOME"/core/infrastructure/coreoracle/pairKey
 	if [[ -e "$currentPath_bin" ]]
 	then
-		"$currentPath_bin" _rand "$@"
+		"$currentPath_bin" "$@"
 		return
 	fi
 	
@@ -15718,21 +15885,21 @@ _rand_bin() {
 		currentPath_bin=/cygdrive/c/core/infrastructure/coreoracle/pairKey
 		if [[ -e "$currentPath_bin" ]]
 		then
-			"$currentPath_bin" _rand "$@"
+			"$currentPath_bin" "$@"
 			return
 		fi
 		
 		currentPath_bin=/cygdrive/c/core/infrastructure/extendedInterface/_lib/coreoracle-msw/pairKey
 		if [[ -e "$currentPath_bin" ]]
 		then
-			"$currentPath_bin" _rand "$@"
+			"$currentPath_bin" "$@"
 			return
 		fi
 		
 		currentPath_bin=/cygdrive/c/core/infrastructure/extendedInterface/_lib/coreoracle/pairKey
 		if [[ -e "$currentPath_bin" ]]
 		then
-			"$currentPath_bin" _rand "$@"
+			"$currentPath_bin" "$@"
 			return
 		fi
 	fi
@@ -15748,9 +15915,119 @@ _rand_bin() {
 
 
 
+_extractEntropy-bitmask() {
+	local current_bitmask
+	local currentIteration
+	for currentIteration in $(seq 1 24);
+	do
+		current_bitmask=$(_safeEcho "$1" | tr -dc '0-9' | head -c "$currentIteration" | tail -c 1)
+		
+		if [[ "$currentIteration" -le $(_safeEcho "$1" | wc -c | tr -dc '0-9') ]]
+		then
+			case "$current_bitmask" in
+				0)
+					true
+					;;
+				1)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc '0-9' | head -c 1
+					;;
+				2)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-z' | head -c 1
+					;;
+				4)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'A-Z' | head -c 1
+					;;
+				8)
+					if [[ "$currentIteration" -lt $(_safeEcho "$1" | wc -c | tr -dc '0-9') ]] && [[ "$currentIteration" -lt "24" ]]
+					then
+						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | tr -dc '%' | head -c 1
+					else
+						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | tr -dc '?' | head -c 1
+					fi
+					;;
+				3)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-z0-9' | head -c 1
+					;;
+				5)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'A-Z0-9' | head -c 1
+					;;
+				7)
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-zA-Z0-9' | head -c 1
+					;;
+			esac
+		fi
+	done
+	
+	
+	
+	
+	
+	
+}
+
+
+
+
+_seed-wifi-card() {
+	_messageNormal ${FUNCNAME[0]}
+	_s
+	
+	local current_SSID
+	current_SSID="$1"
+	
+	local current_security
+	current_security="$2"
+	
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	
+	_seed-wifi "$current_SSID" "$current_security"
+	
+	_seed-wifi-magswipe $(echo -n "$current_security" | tr 'a-z' 'A-Z' | tr -dc '0-9A-Z' )
+}
+_wifi-card() {
+	_seed-wifi-card "$@"
+}
+
+
+
+
 
 _seed() {
-	echo test
+	_messageNormal ${FUNCNAME[0]}
+	_s
+	
+	_seed-barcode "$@"
+	
+	_seed-magswipe "$@"
+}
+
+
+
+
+_legacy() {
+	_messageNormal ${FUNCNAME[0]}
+	_s
+	
+	_legacy-barcode "$@"
+	
+	_legacy-magswipe $(echo -n "$1" | tr 'a-z' 'A-Z' | tr -dc '0-9A-Z' )
+}
+
+
+_basic() {
+	_messageNormal ${FUNCNAME[0]}
+	_s
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$barcode_bitmask")
+	
+	_messagePlain_nominal _basic-barcode
+	_basic-barcode_procedure "$current_text"
+	#_basic-barcode "$current_text"
+	
+	_basic-magswipe $(echo -n "$current_security" | tr 'a-z' 'A-Z' | tr -dc '0-9A-Z' )
 }
 
 
@@ -15758,10 +16035,23 @@ _seed() {
 
 
 
-
-
-
 _refresh_anchors() {
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_print
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_label
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_tear
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_qr
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_barcode
+	
+	
+	
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-wifi
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_wifi
+	
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_seed-wifi-card
+	cp -a "$scriptAbsoluteFolder"/_anchor "$scriptAbsoluteFolder"/_wifi-card
+	
+	
+	
 	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed.bat
 	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-barcode.bat
 	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-magswipe.bat
@@ -15770,7 +16060,9 @@ _refresh_anchors() {
 	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_basic-barcode.bat
 	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_basic-magswipe.bat
 	
-	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_seed-wifi.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_legacy.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_legacy-barcode.bat
+	cp -a "$scriptAbsoluteFolder"/_anchor.bat "$scriptAbsoluteFolder"/_legacy-magswipe.bat
 }
 
 
@@ -15823,14 +16115,16 @@ _set_LinePrinter() {
 
 
 
-# WARNING: Function '_interact' must NOT be defined 
-_interact() {
-	source ./bin/activate
+# WARNING: Function '_interact' must NOT be defined within compressed_functions (or similar) !
+_interact-escpos() {
+	source "$scriptLib"/escpos-python/venv_python/bin/activate
 	
 	_set_LinePrinter
 	
-	#"$scriptAbsoluteFolder"/print.py '_python()'
-	"$scriptAbsoluteFolder"/print.py '_interact("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	_s
+	
+	#"$scriptLib"/escpos-python/print.py '_python()'
+	"$scriptLib"/escpos-python/print.py '_interact_escpos("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
 }
 
 
@@ -15845,20 +16139,56 @@ _qr_sequence() {
   local current_content
   current_content=$(_safeEcho_newline "$@")
   
-  #source ./bin/activate
+  #source "$scriptLib"/escpos-python/venv_python/bin/activate
   
   _set_LinePrinter
   
-  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  #_s
+  
+  _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
-  "$scriptAbsoluteFolder"/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   _stop
 }
 
 _qr() {
+  _messagePlain_nominal ${FUNCNAME[0]}
   "$scriptAbsoluteLocation" _qr_sequence "$@"
+}
+
+
+
+# "$1" == SSID
+# "$2" == security
+_seed-wifi() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	# https://pocketables.com/2022/01/how-to-format-that-wifi-qr-code-in-plain-text.html
+	# 'WIFI:S:'"$1"';T:WPA;P:'"$2"';H:<true|false|blank>;;'
+	# 'WIFI:S:'"$1"';T:WPA;P:'"$2"';;'
+	
+	_set_LinePrinter
+	
+	_s
+	
+	local current_SSID
+	current_SSID="$1"
+	
+	local current_security
+	current_security="$2"
+	
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	
+	#_messagePlain_probe_cmd
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "WiFi: '"$current_SSID"' '"$current_security"'")'
+	
+	#_qr 'WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;' 
+}
+_wifi() {
+	_seed-wifi "$@"
 }
 
 
@@ -15871,49 +16201,124 @@ _barcode_sequence() {
   local current_content
   current_content=$(_safeEcho_newline "$@")
   
-  #source ./bin/activate
+  #source "$scriptLib"/escpos-python/venv_python/bin/activate
   
   _set_LinePrinter
   
-  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  #_s
+  
+  _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
-  "$scriptAbsoluteFolder"/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   _stop
 }
 
 _barcode() {
+  _messagePlain_nominal ${FUNCNAME[0]}
   "$scriptAbsoluteLocation" _barcode_sequence "$@"
 }
 
 
 
-_seed() {
+_seed-barcode_sequence() {
 	_start
-
-	local current_content
-	current_content=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
 	
 	local current_text
 	current_text=$(_safeEcho_newline "$@")
 	
-	#source ./bin/activate
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
 	
 	_set_LinePrinter
 	
-	_messagePlain_probe "$scriptAbsoluteFolder"/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	#_s
+
+	local current_content
+	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed")
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
 	#_messagePlain_probe_cmd
-	"$scriptAbsoluteFolder"/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
 	
 	_stop
-	
-	#local current_seed
-	#current_seed=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
-	_barcode $("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
 }
 
+_seed-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _seed-barcode_sequence "$@"
+}
+
+
+
+
+# DANGER: Strongly discouraged.
+_legacy-barcode_sequence() {
+	_start
+
+	local current_content
+	current_content="$1"
+	#current_content='%'"$current_content"'?'
+	shift
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
+	
+	_set_LinePrinter
+	
+	_s
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	_stop
+}
+_legacy-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _legacy-barcode_sequence "$@"
+}
+
+
+_basic-barcode_procedure() {
+	#_start
+	
+	_s
+	
+	local current_content
+	
+	
+	#p.barcode(current_content, "code128", 64, 3, 'BELOW', 'A', False, None, True, True)
+	current_content="$current_security"
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	
+	
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
+	
+	_set_LinePrinter
+	
+	_s
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	#_stop
+}
+_basic-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _basic-barcode_procedure "$@"
+}
 
 
 
@@ -15963,7 +16368,221 @@ _tear() {
 
 
 
- 
+
+
+_set_msr605() {
+	true
+}
+
+
+
+# WARNING: Function '_interact' must NOT be defined within compressed_functions (or similar) !
+# WARNING: Function '_interact' must NOT be defined within compressed_functions (or similar) !
+_interact-magswipe() {
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	#"$scriptLib"/msr605-python/magswipe.py '_python()'
+	"$scriptLib"/msr605-python/magswipe.py '_interact_magswipe()'
+}
+
+
+_seed-wifi-magswipe_sequence() {
+	_start
+	
+	
+	_s
+	
+	local current_content
+	current_content="$1"
+	
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	
+	
+	local current_content_track1
+	current_content_track1="$current_content"
+	
+	local current_content_track2
+	current_content_track2=''
+	
+	local current_content_track3
+	current_content_track3=''
+	
+	
+	
+	
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/msr605-python/magswipe.py '_seed("     ", "     ", "     ")'
+	
+	(sleep 2 ; _messagePlain_request 'request: swipe magswipe card') &
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/msr605-python/magswipe.py '_seed("'"$current_content_track1"'", "'"$current_content_track2"'", "'"$current_content_track3"'")'
+	
+	_stop
+}
+_seed-wifi-magswipe() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _seed-wifi-magswipe_sequence "$@"
+}
+
+
+
+_seed-magswipe_sequence() {
+	_start
+	
+	
+	_s
+	
+	local current_content
+	#current_content="$1"
+	
+	#[[ "$current_content" == "" ]] && 
+	current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	
+	
+	local current_content_track1
+	current_content_track1="$current_content"
+	
+	local current_content_track2
+	current_content_track2=''
+	
+	local current_content_track3
+	current_content_track3=''
+	
+	
+	
+	
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/msr605-python/magswipe.py '_seed("     ", "     ", "     ")'
+	
+	(sleep 2 ; _messagePlain_request 'request: swipe magswipe card') &
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/msr605-python/magswipe.py '_seed("'"$current_content_track1"'", "'"$current_content_track2"'", "'"$current_content_track3"'")'
+	
+	_stop
+}
+_seed-magswipe() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _seed-magswipe_sequence "$@"
+}
+
+
+
+
+# DANGER: Strongly discouraged.
+_legacy-magswipe_sequence() {
+	_start
+	
+	
+	_s
+	
+	local current_content
+	current_content="$1"
+	
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	
+	
+	local current_content_track1
+	current_content_track1="$current_content"
+	
+	local current_content_track2
+	current_content_track2=''
+	
+	local current_content_track3
+	current_content_track3=''
+	
+	
+	
+	
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/msr605-python/magswipe.py '_seed("     ", "     ", "     ")'
+	
+	(sleep 2 ; _messagePlain_request 'request: swipe magswipe card') &
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/msr605-python/magswipe.py '_seed("'"$current_content_track1"'", "'"$current_content_track2"'", "'"$current_content_track3"'")'
+	
+	_stop
+}
+_legacy-magswipe() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _legacy-magswipe_sequence "$@"
+}
+
+
+
+_basic-magswipe_sequence() {
+	_start
+	
+	
+	_s
+	
+	local current_content
+	current_content="$1"
+	
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	
+	
+	local current_content_track1
+	current_content_track1="$current_content"
+	
+	local current_content_track2
+	current_content_track2=''
+	
+	local current_content_track3
+	current_content_track3=''
+	
+	
+	
+	
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/msr605-python/magswipe.py '_seed("     ", "     ", "     ")'
+	
+	(sleep 2 ; _messagePlain_request 'request: swipe magswipe card') &
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/msr605-python/magswipe.py '_seed("'"$current_content_track1"'", "'"$current_content_track2"'", "'"$current_content_track3"'")'
+	
+	_stop
+}
+_basic-magswipe() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _basic-magswipe_sequence "$@"
+}
+
+
+
+_erase-magswipe() {
+	#source "$scriptLib"/msr605-python/venv_python/bin/activate
+	
+	_set_msr605
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/msr605-python/magswipe.py '_erase()'
+	
+	(sleep 2 ; _messagePlain_request 'request: swipe magswipe card') &
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/msr605-python/magswipe.py '_erase()'
+}
+_erase() {
+	_erase-magswipe "$@"
+}
+
 
 #currentReversePort=""
 #currentMatchingReversePorts=""

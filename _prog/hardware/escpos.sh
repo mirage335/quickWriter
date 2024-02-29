@@ -17,14 +17,16 @@ _set_LinePrinter() {
 
 
 
-# WARNING: Function '_interact' must NOT be defined 
-_interact() {
-	source ./bin/activate
+# WARNING: Function '_interact' must NOT be defined within compressed_functions (or similar) !
+_interact-escpos() {
+	source "$scriptLib"/escpos-python/venv_python/bin/activate
 	
 	_set_LinePrinter
 	
-	#"$scriptAbsoluteFolder"/print.py '_python()'
-	"$scriptAbsoluteFolder"/print.py '_interact("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	_s
+	
+	#"$scriptLib"/escpos-python/print.py '_python()'
+	"$scriptLib"/escpos-python/print.py '_interact_escpos("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
 }
 
 
@@ -39,20 +41,56 @@ _qr_sequence() {
   local current_content
   current_content=$(_safeEcho_newline "$@")
   
-  #source ./bin/activate
+  #source "$scriptLib"/escpos-python/venv_python/bin/activate
   
   _set_LinePrinter
   
-  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  #_s
+  
+  _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
-  "$scriptAbsoluteFolder"/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   _stop
 }
 
 _qr() {
+  _messagePlain_nominal ${FUNCNAME[0]}
   "$scriptAbsoluteLocation" _qr_sequence "$@"
+}
+
+
+
+# "$1" == SSID
+# "$2" == security
+_seed-wifi() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	# https://pocketables.com/2022/01/how-to-format-that-wifi-qr-code-in-plain-text.html
+	# 'WIFI:S:'"$1"';T:WPA;P:'"$2"';H:<true|false|blank>;;'
+	# 'WIFI:S:'"$1"';T:WPA;P:'"$2"';;'
+	
+	_set_LinePrinter
+	
+	_s
+	
+	local current_SSID
+	current_SSID="$1"
+	
+	local current_security
+	current_security="$2"
+	
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	
+	#_messagePlain_probe_cmd
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "WiFi: '"$current_SSID"' '"$current_security"'")'
+	
+	#_qr 'WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;' 
+}
+_wifi() {
+	_seed-wifi "$@"
 }
 
 
@@ -65,49 +103,124 @@ _barcode_sequence() {
   local current_content
   current_content=$(_safeEcho_newline "$@")
   
-  #source ./bin/activate
+  #source "$scriptLib"/escpos-python/venv_python/bin/activate
   
   _set_LinePrinter
   
-  _messagePlain_probe "$scriptAbsoluteFolder"/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  #_s
+  
+  _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
-  "$scriptAbsoluteFolder"/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+  "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   _stop
 }
 
 _barcode() {
+  _messagePlain_nominal ${FUNCNAME[0]}
   "$scriptAbsoluteLocation" _barcode_sequence "$@"
 }
 
 
 
-_seed() {
+_seed-barcode_sequence() {
 	_start
-
-	local current_content
-	current_content=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
 	
 	local current_text
 	current_text=$(_safeEcho_newline "$@")
 	
-	#source ./bin/activate
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
 	
 	_set_LinePrinter
 	
-	_messagePlain_probe "$scriptAbsoluteFolder"/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	#_s
+
+	local current_content
+	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed")
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
 	#_messagePlain_probe_cmd
-	"$scriptAbsoluteFolder"/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
 	
 	_stop
-	
-	#local current_seed
-	#current_seed=$("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
-	_barcode $("$HOME"/core/infrastructure/coreoracle/pairKey _extractEntropyAlpha 14)
 }
 
+_seed-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _seed-barcode_sequence "$@"
+}
+
+
+
+
+# DANGER: Strongly discouraged.
+_legacy-barcode_sequence() {
+	_start
+
+	local current_content
+	current_content="$1"
+	#current_content='%'"$current_content"'?'
+	shift
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
+	
+	_set_LinePrinter
+	
+	_s
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	_stop
+}
+_legacy-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _legacy-barcode_sequence "$@"
+}
+
+
+_basic-barcode_procedure() {
+	#_start
+	
+	_s
+	
+	local current_content
+	
+	
+	#p.barcode(current_content, "code128", 64, 3, 'BELOW', 'A', False, None, True, True)
+	current_content="$current_security"
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	
+	
+	
+	local current_text
+	current_text=$(_safeEcho_newline "$@")
+	
+	#source "$scriptLib"/escpos-python/venv_python/bin/activate
+	
+	_set_LinePrinter
+	
+	_s
+	
+	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
+	
+	#_messagePlain_probe_cmd
+	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	#_stop
+}
+_basic-barcode() {
+	_messagePlain_nominal ${FUNCNAME[0]}
+	"$scriptAbsoluteLocation" _basic-barcode_procedure "$@"
+}
 
 
 

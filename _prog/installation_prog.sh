@@ -74,7 +74,7 @@ _setup-msr605() {
 
 
 _setup_prog() {
-	if [[ $("$scriptAbsoluteLocation" _rand_bin | wc -c | tr -dc '0-9') -lt 16 ]]
+	if [[ $("$scriptAbsoluteLocation" _extractEntropyAlpha_bin _extractEntropyAlpha 16 | wc -c | tr -dc '0-9') != 16 ]]
 	then
 		echo 'missing: _rand (coreoracle, pairKey)'
 		_messageFAIL

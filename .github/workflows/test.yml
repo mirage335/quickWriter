@@ -57,7 +57,7 @@ jobs:
         run: |
           mkdir -p ~/core/infrastructure
           cd ~/core/infrastructure
-          git clone --depth 1 --recursive https://github.com/mirage335/coreoracle.git
+          ~/core/infrastructure/ubiquitous_bash/ubiquitous_bash.sh _gitBest clone --depth 1 --recursive git@github.com:mirage335/coreoracle.git
       - name: _getMinimal_cloud
         shell: bash
         run: |

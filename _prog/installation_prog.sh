@@ -46,7 +46,7 @@ _setup-escpos_sequence() {
 	
 	_messagePlain_probe_var current_abstract_PWD_absolute
 	
-	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs python3 -m venv "$current_abstract_PWD"/venv_python
+	[[ $(echo 'print("true")' | "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 | tr -dc 'a-z') != "true" ]] && _messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs python3 -m venv "$current_abstract_PWD"/venv_python
 	
 	#source ./bin/activate
 	

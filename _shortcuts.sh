@@ -71,6 +71,23 @@ _seed-magswipe() {
 }
 
 
+
+
+_legacy() {
+	"$shortcutsPath_quickWriter"/quickWriter ${FUNCNAME[0]} "$@"
+}
+
+_legacy-barcode() {
+	"$shortcutsPath_quickWriter"/quickWriter ${FUNCNAME[0]} "$@"
+}
+
+_legacy-magswipe() {
+	"$shortcutsPath_quickWriter"/quickWriter ${FUNCNAME[0]} "$@"
+}
+
+
+
+
 _basic() {
 	"$shortcutsPath_quickWriter"/quickWriter ${FUNCNAME[0]} "$@"
 }

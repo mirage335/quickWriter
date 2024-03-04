@@ -24,9 +24,14 @@ _interact-escpos() {
 	_set_LinePrinter
 	
 	_s
+
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
 	
-	#"$scriptLib"/escpos-python/print.py '_python()'
-	"$scriptLib"/escpos-python/print.py '_interact_escpos("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	#"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_python()'
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_interact_escpos("'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
+	
+	cd "$functionEntryPWD"
 }
 
 
@@ -47,11 +52,15 @@ _qr_sequence() {
   
   #_s
   
+  local functionEntryPWD="$PWD"
+  cd "$scriptLib"/escpos-python
+  
   _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
   "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
+  cd "$functionEntryPWD"
   _stop
 }
 
@@ -74,6 +83,9 @@ _seed-wifi() {
 	
 	_s
 	
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
+	
 	local current_SSID
 	current_SSID="$1"
 	
@@ -87,7 +99,9 @@ _seed-wifi() {
 	#_messagePlain_probe_cmd
 	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_qr("WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "WiFi: '"$current_SSID"' '"$current_security"'")'
 	
-	#_qr 'WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;' 
+	#_qr 'WIFI:S:'"$current_SSID"';T:WPA;P:'"$current_security"';;'
+	
+	cd "$functionEntryPWD" 
 }
 _wifi() {
 	_seed-wifi "$@"
@@ -109,11 +123,16 @@ _barcode_sequence() {
   
   #_s
   
+  local functionEntryPWD="$PWD"
+  cd "$scriptLib"/escpos-python
+  
   _messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
   #_messagePlain_probe_cmd
   "$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_barcode("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
   
+  cd "$functionEntryPWD"
+
   _stop
 }
 
@@ -136,6 +155,9 @@ _seed-barcode_sequence() {
 	
 	#_s
 
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
+
 	local current_content
 	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
 	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed")
@@ -143,7 +165,9 @@ _seed-barcode_sequence() {
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
 	#_messagePlain_probe_cmd
-	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	cd "$functionEntryPWD"
 	
 	_stop
 }
@@ -173,11 +197,16 @@ _legacy-barcode_sequence() {
 	_set_LinePrinter
 	
 	_s
+
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
 	#_messagePlain_probe_cmd
-	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	cd "$functionEntryPWD"
 	
 	_stop
 }
@@ -191,6 +220,9 @@ _basic-barcode_procedure() {
 	#_start
 	
 	_s
+
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
 	
 	local current_content
 	
@@ -198,6 +230,10 @@ _basic-barcode_procedure() {
 	#p.barcode(current_content, "code128", 64, 3, 'BELOW', 'A', False, None, True, True)
 	current_content="$current_security"
 	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	
+	
+	
+	cd "$functionEntryPWD"
 	
 	
 	
@@ -209,11 +245,16 @@ _basic-barcode_procedure() {
 	_set_LinePrinter
 	
 	_s
+
+	local functionEntryPWD="$PWD"
+	cd "$scriptLib"/escpos-python
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
 	#_messagePlain_probe_cmd
-	"$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	"$scriptAbsoluteLocation" _abstractfs "$scriptLib"/escpos-python/print.py '_seed("'"$current_content"'", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "'"$current_text"'")'
+	
+	cd "$functionEntryPWD"
 	
 	#_stop
 }

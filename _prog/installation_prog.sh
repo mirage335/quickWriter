@@ -50,6 +50,8 @@ _setup-escpos_sequence() {
 	
 	#source ./bin/activate
 	
+	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m ensurepip --upgrade
+	
 	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m pip install --upgrade pip
 	_messagePlain_probe_cmd "$scriptAbsoluteLocation" _abstractfs "$current_abstract_PWD"/venv_python/bin/python3 -m pip --version
 	

@@ -4,3 +4,4 @@
 
 !*log*.py
 !*cache*.py
+!cachecontrol

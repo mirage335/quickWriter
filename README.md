@@ -316,6 +316,51 @@ if false; then true; # -->
 <!-- # --><div style="page-break-before: always;margin: 0;padding: 0; border-width: 0px;"> </div>
 <!--
 fi
+ '_heading1' 'Further'
+if false; then true; # -->
+<!-- # --><h1>Further</h1>
+<!--
+fi
+ '_heading2' 'Vertical Barcodes'
+if false; then true; # -->
+<!-- # --><h2>Vertical Barcodes</h2>
+<!--
+fi
+ '_paragraph_begin'
+if false; then true; # -->
+<!-- # --><p>
+<!--
+fi
+_t '
+scriptedIllustrator_markup_uk4uPhB663kVcygT0q --><!-- # --><pre style="margin-top: 0px;margin-bottom: 0px;white-space: pre-wrap;">Sometimes very long barcodes may be helpful for arbitrary legacy data (eg. 
+GH API tokens) beyond the length and characters available with magswipe. 
+Printing the barcodes vertically may be helpful.
+
+GitHub copilot should be able to quickly determine some python functions to 
+add to &#39;_lib/escpos-python/print.py&#39; to supplement the existing 
+&#39;_barcode()&#39; function there.
+
+https://python-barcode.readthedocs.io/en/stable/supported-formats.html
+
+
+
+
+
+
+
+
+<!-- # --></pre><!-- scriptedIllustrator_markup_uk4uPhB663kVcygT0q
+'
+ '_paragraph_end'
+if false; then true; # -->
+<!-- # --></p>
+<!--
+fi
+ '_page'
+if false; then true; # -->
+<!-- # --><div style="page-break-before: always;margin: 0;padding: 0; border-width: 0px;"> </div>
+<!--
+fi
  '_heading1' 'Reference'
 if false; then true; # -->
 <!-- # --><h1>Reference</h1>

@@ -122,6 +122,25 @@ _t '
 
 '
 _page
+_heading1 'Further'
+_heading2 'Vertical Barcodes'
+_paragraph_begin
+_t 'Sometimes very long barcodes may be helpful for arbitrary legacy data (eg. GH API tokens) beyond the length and characters available with magswipe. Printing the barcodes vertically may be helpful.
+
+GitHub copilot should be able to quickly determine some python functions to add to &#39;_lib/escpos-python/print.py&#39; to supplement the existing &#39;_barcode()&#39; function there.
+
+https://python-barcode.readthedocs.io/en/stable/supported-formats.html
+
+
+
+
+
+
+
+
+'
+_paragraph_end
+_page
 _heading1 'Reference'
 _paragraph_begin
 _t '

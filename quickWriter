@@ -36,7 +36,7 @@ _ub_cksum_special_derivativeScripts_contents() {
 #export ub_setScriptChecksum_disable='true'
 ( [[ -e "$0".nck ]] || [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [[ "$1" == '--profile' ]] || [[ "$1" == '--script' ]] || [[ "$1" == '--call' ]] || [[ "$1" == '--return' ]] || [[ "$1" == '--devenv' ]] || [[ "$1" == '--shell' ]] || [[ "$1" == '--bypass' ]] || [[ "$1" == '--parent' ]] || [[ "$1" == '--embed' ]] || [[ "$1" == '--compressed' ]] || [[ "$0" == "/bin/bash" ]] || [[ "$0" == "-bash" ]] || [[ "$0" == "/usr/bin/bash" ]] || [[ "$0" == "bash" ]] ) && export ub_setScriptChecksum_disable='true'
 export ub_setScriptChecksum_header='2591634041'
-export ub_setScriptChecksum_contents='1900496730'
+export ub_setScriptChecksum_contents='3954607921'
 
 # CAUTION: Symlinks may cause problems. Disable this test for such cases if necessary.
 # WARNING: Performance may be crucial here.
@@ -15815,25 +15815,35 @@ _s() {
 	#BARCODE - basic ONLY. Normally this is the ONLY bitmask to change, and ONLY to address (discouraged) tradeoffs with specialized software.
 	[[ "$1" != "" ]] && export barcode_bitmask="$1"
 	[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=33333333333333
+	[[ "$barcode_filter" == "" ]] && export barcode_filter="cat"
 	#[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=111111111111111111111111
+	#[[ "$barcode_filter" == "" ]] && export barcode_filter="cat"
 	
 	#DANGER: Strongly discouraged. Low entropy, for very specialized use only.
 	#[[ "$barcode_bitmask" == "" ]] && export barcode_bitmask=111111111111111
+	#[[ "$barcode_filter" == "" ]] && export barcode_filter="cat"
 	
 	
 	
 	#MAGSWIPE SEED. No normal reason to change this.
 	[[ "$2" != "" ]] && export magswipe_bitmask="$2"
-	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=55555555555555555555
+	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=5555555555555555555555555
+	[[ "$magswipe_filter" == "" ]] && export magswipe_filter="_extractEntropy-bitmask-FILTER"
+	#[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=55555555555555555555
+	#[[ "$magswipe_filter" == "" ]] && export magswipe_filter="cat"
 	
 	# WiFi SEED. No normal reason to change this.
 	[[ "$3" != "" ]] && export qrcode_bitmask="$3"
-	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=83333333333333333338
+	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=833333333333333333333338
+	[[ "$qrcode_bitmask" == "" ]] && export qrcode_filter="_extractEntropy-bitmask-FILTER"
+	#[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=83333333333333333338
+	#[[ "$qrcode_filter" == "" ]] && export qrcode_filter="cat"
 	
 	
 	#BARCODE SEED. No normal reason to change this.
 	[[ "$4" != "" ]] && export barcode_bitmask_seed="$4"
 	[[ "$barcode_bitmask_seed" == "" ]] && export barcode_bitmask_seed=77777777777777
+	[[ "$barcode_bitmask_seed_filter" == "" ]] && export barcode_bitmask_seed_filter="cat"
 	
 	true
 }
@@ -15950,8 +15960,20 @@ _extractEntropyAlpha_bin() {
 
 
 
-
+_extractEntropy-bitmask-FILTER_SUBSTITUTE_ambigious() {
+	tr '15680blBDIOSUV' '23479abACEFGHJ'
+}
+_extractEntropy-bitmask-FILTER_REMOVE_ambigious() {
+	tr -dc '15680blBDIOSUV'
+}
+_extractEntropy-bitmask-FILTER() {
+	_extractEntropy-bitmask-FILTER_REMOVE_ambigious "$@"
+}
 _extractEntropy-bitmask() {
+	local current_filter
+	current_filter="$2"
+	[[ "$current_filter" == "" ]] && current_filter="cat"
+	
 	local current_bitmask
 	local currentIteration
 	for currentIteration in $(seq 1 24);
@@ -16014,7 +16036,7 @@ _seed-wifi-card() {
 	local current_security
 	current_security="$2"
 	
-	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask" "$qrcode_filter")
 	
 	_seed-wifi "$current_SSID" "$current_security"
 	
@@ -16057,7 +16079,7 @@ _basic() {
 	local current_text
 	current_text=$(_safeEcho_newline "$@")
 	
-	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$barcode_bitmask")
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
 	
 	_messagePlain_nominal _basic-barcode
 	_basic-barcode_procedure "$current_text"
@@ -16226,7 +16248,7 @@ _seed-wifi() {
 	local current_security
 	current_security="$2"
 	
-	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask" "$qrcode_filter")
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
 	
@@ -16293,8 +16315,8 @@ _seed-barcode_sequence() {
 	cd "$scriptLib"/escpos-python
 
 	local current_content
-	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
-	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed")
+	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
+	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed" "$barcode_bitmask_seed_filter")
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
@@ -16363,7 +16385,7 @@ _basic-barcode_procedure() {
 	
 	#p.barcode(current_content, "code128", 64, 3, 'BELOW', 'A', False, None, True, True)
 	current_content="$current_security"
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
 	
 	
 	
@@ -16474,7 +16496,7 @@ _seed-wifi-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$qrcode_bitmask" "$qrcode_filter")
 	
 	
 	local current_content_track1
@@ -16519,7 +16541,7 @@ _seed-magswipe_sequence() {
 	#current_content="$1"
 	
 	#[[ "$current_content" == "" ]] && 
-	current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	current_content=$(_extractEntropy-bitmask "$magswipe_bitmask" "$magswipe_filter")
 	
 	
 	local current_content_track1
@@ -16565,7 +16587,7 @@ _legacy-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$magswipe_bitmask" "$magswipe_filter")
 	
 	
 	local current_content_track1
@@ -16609,7 +16631,7 @@ _basic-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
 	
 	
 	local current_content_track1

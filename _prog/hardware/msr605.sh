@@ -27,7 +27,7 @@ _seed-wifi-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$qrcode_bitmask" "$qrcode_filter")
 	
 	
 	local current_content_track1
@@ -72,7 +72,7 @@ _seed-magswipe_sequence() {
 	#current_content="$1"
 	
 	#[[ "$current_content" == "" ]] && 
-	current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	current_content=$(_extractEntropy-bitmask "$magswipe_bitmask" "$magswipe_filter")
 	
 	
 	local current_content_track1
@@ -118,7 +118,7 @@ _legacy-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$magswipe_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$magswipe_bitmask" "$magswipe_filter")
 	
 	
 	local current_content_track1
@@ -162,7 +162,7 @@ _basic-magswipe_sequence() {
 	local current_content
 	current_content="$1"
 	
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
 	
 	
 	local current_content_track1

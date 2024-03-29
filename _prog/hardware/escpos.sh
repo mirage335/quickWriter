@@ -92,7 +92,7 @@ _seed-wifi() {
 	local current_security
 	current_security="$2"
 	
-	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask")
+	[[ "$current_security" == "" ]] && current_security=$(_extractEntropy-bitmask "$qrcode_bitmask" "$qrcode_filter")
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_qr("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"')'
 	
@@ -159,8 +159,8 @@ _seed-barcode_sequence() {
 	cd "$scriptLib"/escpos-python
 
 	local current_content
-	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
-	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed")
+	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
+	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed" "$barcode_bitmask_seed_filter")
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	
@@ -229,7 +229,7 @@ _basic-barcode_procedure() {
 	
 	#p.barcode(current_content, "code128", 64, 3, 'BELOW', 'A', False, None, True, True)
 	current_content="$current_security"
-	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask")
+	[[ "$current_content" == "" ]] && current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
 	
 	
 	

@@ -35,7 +35,7 @@ _s() {
 	# WiFi SEED. No normal reason to change this.
 	[[ "$3" != "" ]] && export qrcode_bitmask="$3"
 	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=833333333333333333333338
-	[[ "$qrcode_bitmask" == "" ]] && export qrcode_filter="_extractEntropy-bitmask-FILTER"
+	[[ "$qrcode_filter" == "" ]] && export qrcode_filter="_extractEntropy-bitmask-FILTER"
 	#[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=83333333333333333338
 	#[[ "$qrcode_filter" == "" ]] && export qrcode_filter="cat"
 	
@@ -177,7 +177,7 @@ _extractEntropy-bitmask() {
 	current_filter="$2"
 	[[ "$current_filter" == "" ]] && current_filter="cat"
 	
-	#_messagePlain_probe_var current_filter > /dev/tty
+	_messagePlain_probe_var current_filter > /dev/tty
 	
 	local current_bitmask
 	local currentIteration

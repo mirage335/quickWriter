@@ -28,7 +28,7 @@ _s() {
 	#MAGSWIPE SEED. No normal reason to change this.
 	[[ "$2" != "" ]] && export magswipe_bitmask="$2"
 	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=555555555555555555555555
-	[[ "$magswipe_filter" == "" ]] && export magswipe_filter="_extractEntropy-bitmask-FILTER"
+	[[ "$magswipe_filter" == "" ]] && export magswipe_filter="_extractEntropy-bitmask-FILTER_REMOVE_ambigious-magswipe"
 	#[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=55555555555555555555
 	#[[ "$magswipe_filter" == "" ]] && export magswipe_filter="cat"
 	
@@ -164,7 +164,10 @@ _extractEntropy-bitmask-FILTER_SUBSTITUTE_ambigious() {
 	tr '15680blBDIOSUV' '23479abACEFGHJ'
 }
 _extractEntropy-bitmask-FILTER_REMOVE_ambigious() {
-	tr -dc '15680blBDIOSUV'
+	tr -d '15680blBDIOSUV'
+}
+_extractEntropy-bitmask-FILTER_REMOVE_ambigious-magswipe() {
+	tr -d '15680BLbdiosuv'
 }
 _extractEntropy-bitmask-FILTER() {
 	_extractEntropy-bitmask-FILTER_REMOVE_ambigious "$@"
@@ -173,6 +176,8 @@ _extractEntropy-bitmask() {
 	local current_filter
 	current_filter="$2"
 	[[ "$current_filter" == "" ]] && current_filter="cat"
+	
+	#_messagePlain_probe_var current_filter > /dev/tty
 	
 	local current_bitmask
 	local currentIteration
@@ -196,11 +201,11 @@ _extractEntropy-bitmask() {
 					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'A-Z' | head -c 1
 					;;
 				8)
-					if [[ "$currentIteration" -lt $(_safeEcho "$1" | wc -c | tr -dc '0-9') ]] && [[ "$currentIteration" -lt "24" ]]
+					if [[ "$currentIteration" -lt $(_safeEcho "$1" | wc -c | tr -dc '0-9') ]] && [[ "$currentIteration" -lt "26" ]]
 					then
-						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | tr -dc '%' | head -c 1
+						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | "$current_filter" | tr -dc '%' | head -c 1
 					else
-						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | tr -dc '?' | head -c 1
+						_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | "$current_filter" | tr -dc '?' | head -c 1
 					fi
 					;;
 				3)

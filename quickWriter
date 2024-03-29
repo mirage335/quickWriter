@@ -36,7 +36,7 @@ _ub_cksum_special_derivativeScripts_contents() {
 #export ub_setScriptChecksum_disable='true'
 ( [[ -e "$0".nck ]] || [[ "${BASH_SOURCE[0]}" != "${0}" ]] || [[ "$1" == '--profile' ]] || [[ "$1" == '--script' ]] || [[ "$1" == '--call' ]] || [[ "$1" == '--return' ]] || [[ "$1" == '--devenv' ]] || [[ "$1" == '--shell' ]] || [[ "$1" == '--bypass' ]] || [[ "$1" == '--parent' ]] || [[ "$1" == '--embed' ]] || [[ "$1" == '--compressed' ]] || [[ "$0" == "/bin/bash" ]] || [[ "$0" == "-bash" ]] || [[ "$0" == "/usr/bin/bash" ]] || [[ "$0" == "bash" ]] ) && export ub_setScriptChecksum_disable='true'
 export ub_setScriptChecksum_header='2591634041'
-export ub_setScriptChecksum_contents='3954607921'
+export ub_setScriptChecksum_contents='1356267865'
 
 # CAUTION: Symlinks may cause problems. Disable this test for such cases if necessary.
 # WARNING: Performance may be crucial here.
@@ -15827,7 +15827,7 @@ _s() {
 	
 	#MAGSWIPE SEED. No normal reason to change this.
 	[[ "$2" != "" ]] && export magswipe_bitmask="$2"
-	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=5555555555555555555555555
+	[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=555555555555555555555555
 	[[ "$magswipe_filter" == "" ]] && export magswipe_filter="_extractEntropy-bitmask-FILTER"
 	#[[ "$magswipe_bitmask" == "" ]] && export magswipe_bitmask=55555555555555555555
 	#[[ "$magswipe_filter" == "" ]] && export magswipe_filter="cat"
@@ -15987,13 +15987,13 @@ _extractEntropy-bitmask() {
 					true
 					;;
 				1)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc '0-9' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc '0-9' | head -c 1
 					;;
 				2)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-z' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'a-z' | head -c 1
 					;;
 				4)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'A-Z' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'A-Z' | head -c 1
 					;;
 				8)
 					if [[ "$currentIteration" -lt $(_safeEcho "$1" | wc -c | tr -dc '0-9') ]] && [[ "$currentIteration" -lt "24" ]]
@@ -16004,13 +16004,13 @@ _extractEntropy-bitmask() {
 					fi
 					;;
 				3)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-z0-9' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'a-z0-9' | head -c 1
 					;;
 				5)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'A-Z0-9' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'A-Z0-9' | head -c 1
 					;;
 				7)
-					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | tr -dc 'a-zA-Z0-9' | head -c 1
+					_extractEntropyAlpha_bin _extractEntropyBin 10000000000 | base64 | "$current_filter" | tr -dc 'a-zA-Z0-9' | head -c 1
 					;;
 			esac
 		fi

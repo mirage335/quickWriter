@@ -177,7 +177,7 @@ _extractEntropy-bitmask() {
 	current_filter="$2"
 	[[ "$current_filter" == "" ]] && current_filter="cat"
 	
-	_messagePlain_probe_var current_filter > /dev/tty
+	#_messagePlain_probe_var current_filter > /dev/tty
 	
 	local current_bitmask
 	local currentIteration

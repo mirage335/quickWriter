@@ -34,8 +34,10 @@ _s() {
 	
 	# WiFi SEED. No normal reason to change this.
 	[[ "$3" != "" ]] && export qrcode_bitmask="$3"
-	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=833333333333333333333338
+	[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=855555555555555555555558
 	[[ "$qrcode_filter" == "" ]] && export qrcode_filter="_extractEntropy-bitmask-FILTER"
+	#[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=833333333333333333333338
+	#[[ "$qrcode_filter" == "" ]] && export qrcode_filter="_extractEntropy-bitmask-FILTER"
 	#[[ "$qrcode_bitmask" == "" ]] && export qrcode_bitmask=83333333333333333338
 	#[[ "$qrcode_filter" == "" ]] && export qrcode_filter="cat"
 	

@@ -153,14 +153,14 @@ _seed-barcode_sequence() {
 	
 	_set_LinePrinter
 	
-	#_s
+	_s
 
 	local functionEntryPWD="$PWD"
 	cd "$scriptLib"/escpos-python
 
 	local current_content
-	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
-	current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed" "$barcode_bitmask_seed_filter")
+	current_content=$(_extractEntropy-bitmask "$barcode_bitmask" "$barcode_filter")
+	#current_content=$(_extractEntropy-bitmask "$barcode_bitmask_seed" "$barcode_bitmask_seed_filter")
 	
 	_messagePlain_probe '"$scriptAbsoluteLocation"' _abstractfs "$scriptLib"/escpos-python/print.py '_seed("     ", "'"$current_LinePrinter_devfile"'", '"$current_LinePrinter_baud"', "     ")'
 	

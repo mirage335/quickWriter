@@ -268,7 +268,7 @@ _basic-barcode() {
 _print() {
   _set_LinePrinter
   
-  if [[ "$1" == "/"* ]] && [[ -e "$1" ]]
+  if ( [[ "$1" == "/"* ]] || [[ "$1" == "./"* ]] ) && [[ -e "$1" ]]
   then
     cat "$1" | pv -L 300 2>/dev/null > "$current_LinePrinter_devfile"
     

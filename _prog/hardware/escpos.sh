@@ -1,5 +1,7 @@
 
 
+# ATTENTION: Override with 'ops.sh' or similar.
+#export OVERRIDE_LinePrinter_devfile=/dev/serial/by-id/...
 
 _set_LinePrinter() {
 	export current_LinePrinter_devfile=""
